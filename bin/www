@@ -12,7 +12,7 @@ var https = require('https');
 const moment = require('moment');
 moment.updateLocale('en');
 
-var privateKey = fs.readFileSync(process.env.SSL_CER, 'utf8');
+var privateKey = fs.readFileSync(process.env.SSL_KEY, 'utf8');
 var certificate = fs.readFileSync(process.env.SSL_CER, 'utf8');
 
 var credentials = {
