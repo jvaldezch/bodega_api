@@ -222,4 +222,51 @@ router.post('/detalle-trafico', function (req, res) {
 
 });
 
+
+router.post('/comentarios', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.comentarios(id_trafico, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else if (typeof results !== 'undefined' && results.length > 0) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
 module.exports = router;

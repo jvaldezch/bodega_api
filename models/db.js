@@ -18,12 +18,7 @@ portalModel.login = function (username, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) {
-            callback({
-                status: 'error',
-                message: err
-            }, null);
-        }
+        if (err) callback({ status: 'error', message: err}, null);
 
         var sql = "SELECT id, email, aduana, patente, " +
             "AES_DECRYPT(password, '" + process.env.DBSECRET   + "') AS password " +
@@ -31,44 +26,36 @@ portalModel.login = function (username, callback) {
 
         connection.query(sql, function (error, results, fields) {
 
-            if (error) {
-                connection.release();
-                callback({
-                    status: 'error',
-                    message: error
-                }, null);
+            if (err) callback({ status: 'error', message: err}, null);
+            
+            if (results.length > 0) {
+
+                user = results[0];
+                user.bodegas = []
+
+                var sql2 = "SELECT * FROM trafico_usubodegas WHERE idUsuario = " + user.id + ";"
+                connection.query(sql2, function (err, rows, fields) {
+                    connection.release();
+
+                    if (err) callback({status: 'error',message: error}, null);
+                    
+                    if (rows.length > 0) {
+                        for (var i = 0, len = rows.length; i < len; i++) {                
+                            user.bodegas[i] = rows[i].idBodega;
+                        }
+                    }
+                    callback(null, user);
+
+                });
 
             } else {
-
-                if (results.length > 0) {
-
-                    user = results[0];
-                    user.bodegas = []
-
-                    var sql2 = "SELECT * FROM trafico_usubodegas WHERE idUsuario = " + user.id + ";"
-                    connection.query(sql2, function (err, rows, fields) {
-                        connection.release();
-
-                        if (err) callback({status: 'error',message: error}, null);
-                        
-                        if (rows.length > 0) {
-                            for (var i = 0, len = rows.length; i < len; i++) {                
-                                user.bodegas[i] = rows[i].idBodega;
-                            }
-                        }
-                        callback(null, user);
-
-                    });
-
-                } else {
-                    connection.release();
-                    callback({
-                        status: 'No data found',
-                        message: 'User not found on database.'
-                    }, null);
-                }
-
+                connection.release();
+                callback({
+                    status: 'No data found',
+                    message: 'User not found on database.'
+                }, null);
             }
+
         });
     });
     
@@ -78,39 +65,32 @@ portalModel.traficosDescarga = function (id_bodega, fecha, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) {
-            callback({
-                status: 'error',
-                message: err
-            }, null);
-        }
+        if (err) callback({ status: 'error', message: err}, null);
 
         var sql = "SELECT " +
-            "id, " +
-            "referencia, " +
-            "bultos, " +
-            "contenedorCajaEntrada AS caja_entrada " +
-            "FROM traficos " +
-            "WHERE idBodega = " + db.escape(id_bodega) + "AND fechaEta = " + db.escape(fecha) + ";";
+            "t.id AS id_trafico, " +
+            "t.rfcCliente AS rfc_cliente, " +
+            "c.nombre AS nombre_cliente, " +
+            "t.referencia, " +
+            "t.bultos, " +
+            "t.contenedorCajaEntrada AS caja_entrada " +
+            "FROM traficos t " +
+            "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "WHERE t.idBodega = " + db.escape(id_bodega) + "AND t.fechaEta = " + db.escape(fecha) + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (error) {
-                callback({
-                    status: 'error',
-                    message: error
-                }, null);
+            if (err) callback({ status: 'error', message: err}, null);
 
+            if (results.length > 0) {
+                callback(null, results);
             } else {
-                if (results.length > 0) {
-                    callback(null, results);
-                } else {
-                    callback({
-                        status: 'No data found',
-                        message: false
-                    }, null);
-                }
+                callback({
+                    status: 'No data found',
+                    message: false
+                }, null);
             }
+
         });
 
     });
@@ -121,36 +101,26 @@ portalModel.bodegas = function (id_user, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) {
-            callback({
-                status: 'error',
-                message: err
-            }, null);
-        }
+        if (err) callback({ status: 'error', message: err}, null);
 
         var sql = "SELECT " +
-            "* " +
+            "id AS id_bodega " +
             "FROM trafico_usubodegas " +
             "WHERE idUsuario = " + id_user + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (error) {
-                callback({
-                    status: 'error',
-                    message: error
-                }, null);
+            if (err) callback({ status: 'error', message: err}, null);
 
+            if (results.length > 0) {
+                callback(null, results);
             } else {
-                if (results.length > 0) {
-                    callback(null, results);
-                } else {
-                    callback({
-                        status: 'No data found',
-                        message: 'User not found on database.'
-                    }, null);
-                }
+                callback({
+                    status: 'No data found',
+                    message: 'User not found on database.'
+                }, null);
             }
+
         });
 
     });
@@ -161,12 +131,7 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) {
-            callback({
-                status: 'error',
-                message: err
-            }, null);
-        }
+        if (err) callback({ status: 'error', message: err}, null);
 
         var sql = "SELECT " +
             "t.idBodega as id_bodega," +
@@ -185,22 +150,49 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (error) {
-                callback({
-                    status: 'error',
-                    message: error
-                }, null);
+            if (err) callback({ status: 'error', message: err}, null);
 
+            
+            if (results.length > 0) {
+                callback(null, results);
             } else {
-                if (results.length > 0) {
-                    callback(null, results);
-                } else {
-                    callback({
-                        status: 'No data found',
-                        message: 'User not found on database.'
-                    }, null);
-                }
+                callback({
+                    status: 'No data found',
+                    message: 'User not found on database.'
+                }, null);
             }
+
+        });
+    
+    });
+
+}
+
+
+portalModel.comentarios = function (id_trafico, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        var sql = "SELECT " +
+            "c.id, " +
+            "u.nombre, " +
+            "c.mensaje " +
+            "FROM trafico_comentarios AS c " +
+            "LEFT JOIN usuarios AS u ON u.id = c.idUsuario " +
+            "WHERE c.idTrafico = " + db.escape(id_trafico) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({status: 'No data found', message: 'User not found on database.'}, null);
+            }
+
         });
     
     });
