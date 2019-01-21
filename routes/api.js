@@ -47,6 +47,8 @@ router.post('/login', function (req, res, next) {
                     res.setHeader('Content-Type', 'application/json; charset=utf-8');
                     res.status(200).send({
                         'success': true,
+                        'id_user': result.id,
+                        'email': result.email,
                         'token': token
                     });
 
