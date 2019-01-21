@@ -61,7 +61,7 @@ portalModel.login = function (username, callback) {
     
 }
 
-portalModel.traficosDescarga = function (id_bodega, fecha, callback) {
+portalModel.traficosDescarga = function (id_bodega, callback) {
 
     db.getConnection(function (err, connection) {
 
@@ -76,7 +76,44 @@ portalModel.traficosDescarga = function (id_bodega, fecha, callback) {
             "t.contenedorCajaEntrada AS caja_entrada " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
-            "WHERE t.idBodega = " + db.escape(id_bodega) + "AND t.fechaEta = " + db.escape(fecha) + ";";
+            "WHERE t.idBodega = " + db.escape(id_bodega) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({
+                    status: 'No data found',
+                    message: false
+                }, null);
+            }
+
+        });
+
+    });
+
+}
+
+portalModel.traficosOrdenes = function (id_bodega, fecha, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        var sql = "SELECT " +
+            "t.id AS id_trafico, " +
+            "t.rfcCliente AS rfc_cliente, " +
+            "c.nombre AS nombre_cliente, " +
+            "t.referencia, " +
+            "t.bultos, " +
+            "t.contenedorCajaEntrada AS caja_entrada, " +
+            "t.ordenCarga AS orden_carga " +
+            "FROM traficos t " +
+            "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "WHERE t.ordenCarga IS NOT NULL t.idBodega = " + db.escape(id_bodega) + "AND t.fechaEta = " + db.escape(fecha) + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
