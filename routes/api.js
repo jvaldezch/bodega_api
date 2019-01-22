@@ -270,7 +270,6 @@ router.post('/detalle-trafico', function (req, res) {
 
 });
 
-
 router.post('/comentarios', function (req, res) {
 
     const token = req.headers['x-access-token'];
@@ -303,6 +302,54 @@ router.post('/comentarios', function (req, res) {
                 });
 
             } else if (typeof results !== 'undefined' && results.length > 0) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+router.post('/agregar-comentario', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const message = req.body.message;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.agregarComentario(id_trafico, id_user, message, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.status(200).send({

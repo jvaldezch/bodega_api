@@ -1,6 +1,8 @@
 
 var mysql = require('mysql');
 
+const moment = require('moment');
+
 var db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -205,7 +207,6 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
 
 }
 
-
 portalModel.comentarios = function (id_trafico, callback) {
 
     db.getConnection(function (err, connection) {
@@ -227,7 +228,27 @@ portalModel.comentarios = function (id_trafico, callback) {
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({status: 'No data found', message: 'User not found on database.'}, null);
+                callback({status: 'No data found', message: 'Reference ID does not have comments.'}, null);
+            }
+
+        });
+    
+    });
+
+}
+
+portalModel.agregarComentario = function (id_trafico, id_user, message, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        connection.query('INSERT INTO trafico_comentarios SET ?', {idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss')}, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            if (results.insertId) {
+                callback(null, {'comment': results.insertId});
             }
 
         });
