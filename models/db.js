@@ -237,6 +237,36 @@ portalModel.comentarios = function (id_trafico, callback) {
 
 }
 
+portalModel.discrepancias = function (id_trafico, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        var sql = "SELECT " +
+            "c.id, " +
+            "u.nombre, " +
+            "c.mensaje " +
+            "FROM trafico_discrepancias AS c " +
+            "LEFT JOIN usuarios AS u ON u.id = c.idUsuario " +
+            "WHERE c.idTrafico = " + db.escape(id_trafico) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({status: 'No data found', message: 'Reference ID does not have comments.'}, null);
+            }
+
+        });
+    
+    });
+
+}
+
 portalModel.agregarComentario = function (id_trafico, id_user, message, callback) {
 
     db.getConnection(function (err, connection) {
@@ -248,7 +278,27 @@ portalModel.agregarComentario = function (id_trafico, id_user, message, callback
             if (err) callback({ status: 'error', message: err}, null);
 
             if (results.insertId) {
-                callback(null, {'comment': results.insertId});
+                callback(null, {'id_comment': results.insertId});
+            }
+
+        });
+    
+    });
+
+}
+
+portalModel.agregarDiscrepancia = function (id_trafico, id_user, message, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        connection.query('INSERT INTO trafico_discrepancias SET ?', {idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss')}, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            if (results.insertId) {
+                callback(null, {'id_comment': results.insertId});
             }
 
         });
