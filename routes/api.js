@@ -587,7 +587,7 @@ router.post('/referencia-carga', function (req, res) {
             message: 'Failed to authenticate token.'
         });
 
-        portalModel.referenciaDescarga(id_trafico, id_user, load_date, function (error, results) {
+        portalModel.referenciaCarga(id_trafico, id_user, load_date, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
