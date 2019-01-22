@@ -182,7 +182,10 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.ordenCarga AS orden_carga, " +
             "t.blGuia as bl_guia, " +
             "t.contenedorCajaEntrada AS caja_entrada, " +
-            "t.contenedorCaja as caja, t.lineaTransporte as linea_transporte " +
+            "t.contenedorCaja as caja, " +
+            "t.lineaTransporte as linea_transporte, " +
+            "t.fechaDescarga as fecha_descarga, " +
+            "t.fechaCarga as fecha_carga " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "WHERE t.id = " + db.escape(id_trafico) + ";";
