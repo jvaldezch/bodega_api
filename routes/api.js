@@ -105,6 +105,11 @@ router.post('/bodegas', function (req, res) {
         message: 'No token provided.'
     });
 
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
         if (err) return res.status(500).send({
@@ -379,6 +384,16 @@ router.post('/agregar-comentario', function (req, res) {
         message: 'Traffic ID is necessary.'
     });
 
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+
+    if (!message) return res.status(401).send({
+        error: true,
+        message: 'Message is necessary.'
+    });
+
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
         if (err) return res.status(500).send({
@@ -427,6 +442,16 @@ router.post('/agregar-discrepancia', function (req, res) {
         message: 'Traffic ID is necessary.'
     });
 
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+
+    if (!message) return res.status(401).send({
+        error: true,
+        message: 'Message is necessary.'
+    });
+
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
         if (err) return res.status(500).send({
@@ -435,6 +460,134 @@ router.post('/agregar-discrepancia', function (req, res) {
         });
 
         portalModel.agregarDiscrepancia(id_trafico, id_user, message, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+router.post('/referencia-descarga', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const unload_date = req.body.unload_date;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+    
+    if (!unload_date) return res.status(401).send({
+        error: true,
+        message: 'Unload date is necessary.'
+    });
+
+    if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Unload date is not .'
+    });
+
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.referenciaDescarga(id_trafico, id_user, unload_date, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+router.post('/referencia-carga', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const load_date = req.body.load_date;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+    
+    if (!load_date) return res.status(401).send({
+        error: true,
+        message: 'Load date is necessary.'
+    });
+
+    if (!moment(load_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Load date is not .'
+    });
+
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.referenciaDescarga(id_trafico, id_user, load_date, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');

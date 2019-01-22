@@ -307,4 +307,40 @@ portalModel.agregarDiscrepancia = function (id_trafico, id_user, message, callba
 
 }
 
+portalModel.referenciaDescarga = function (id_trafico, id_user, unload_date, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        connection.query('UPDATE traficos SET fechaDescarga = ? WHERE id = ?', [unload_date, id_trafico], function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            callback(null, {'updated': true});
+
+        });
+    
+    });
+
+}
+
+portalModel.referenciaCarga = function (id_trafico, id_user, load_date, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err}, null);
+
+        connection.query('UPDATE traficos SET fechaCarga = ? WHERE id = ?', [load_date, id_trafico], function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err}, null);
+
+            callback(null, {'updated': true});
+
+        });
+    
+    });
+
+}
+
 module.exports = portalModel;
