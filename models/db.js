@@ -261,7 +261,7 @@ portalModel.discrepancias = function (id_trafico, callback) {
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({ status: 'No data found', message: 'Reference ID does not have comments.' }, null);
+                callback({ status: 'No data found', message: 'Reference ID does not have inconsistencies.' }, null);
             }
 
         });
@@ -369,7 +369,7 @@ portalModel.obtenerBultos = function (id_trafico, callback) {
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({ status: 'No data found', message: 'Reference ID does not have comments.' }, null);
+                callback({ status: 'No data found', message: 'Reference ID does not have packages.' }, null);
             }
 
         });
