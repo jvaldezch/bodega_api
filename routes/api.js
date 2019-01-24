@@ -41,8 +41,8 @@ router.post('/login', function (req, res, next) {
                         aduana: result.aduana,
                         bodegas: result.bodegas,
                     }, process.env.WSSECRET, {
-                        expiresIn: 86400 // expires in 24 hours
-                    });
+                            expiresIn: 86400 // expires in 24 hours
+                        });
 
                     res.setHeader('Content-Type', 'application/json; charset=utf-8');
                     res.status(200).send({
@@ -504,7 +504,7 @@ router.post('/referencia-descarga', function (req, res) {
         error: true,
         message: 'User ID is necessary.'
     });
-    
+
     if (!unload_date) return res.status(401).send({
         error: true,
         message: 'Unload date is necessary.'
@@ -568,7 +568,7 @@ router.post('/referencia-carga', function (req, res) {
         error: true,
         message: 'User ID is necessary.'
     });
-    
+
     if (!load_date) return res.status(401).send({
         error: true,
         message: 'Load date is necessary.'
@@ -588,6 +588,168 @@ router.post('/referencia-carga', function (req, res) {
         });
 
         portalModel.referenciaCarga(id_trafico, id_user, load_date, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+
+router.post('/obtener-bultos', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.obtenerBultos(id_trafico, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+router.post('/agregar-bulto', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_bodega = req.body.id_bodega;
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const dano = req.body.dano;
+    const observacion = req.body.observacion;
+    const qr = req.body.qr;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_bodega) return res.status(401).send({
+        error: true,
+        message: 'Warehouse ID is necessary.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is necessary.'
+    });
+
+    if (!qr) return res.status(401).send({
+        error: true,
+        message: 'QR is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.agregarBulto(id_bodega, id_trafico, id_user, dano, observacion, qr, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+
+            }
+        });
+
+    });
+
+});
+
+router.post('/actualizar-bulto', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_bulto = req.body.id_bodega;
+    const dano = req.body.dano;
+    const observacion = req.body.observacion;
+    const qr = req.body.qr;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!qr) return res.status(401).send({
+        error: true,
+        message: 'QR is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.actualizarBulto(id_bulto, dano, observacion, qr, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');

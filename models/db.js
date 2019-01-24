@@ -20,16 +20,16 @@ portalModel.login = function (username, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT id, email, aduana, patente, " +
-            "AES_DECRYPT(password, '" + process.env.DBSECRET   + "') AS password " +
+            "AES_DECRYPT(password, '" + process.env.DBSECRET + "') AS password " +
             "FROM usuarios WHERE usuario = " + db.escape(username) + ";";
 
         connection.query(sql, function (error, results, fields) {
 
-            if (err) callback({ status: 'error', message: err}, null);
-            
+            if (err) callback({ status: 'error', message: err }, null);
+
             if (results.length > 0) {
 
                 user = results[0];
@@ -39,10 +39,10 @@ portalModel.login = function (username, callback) {
                 connection.query(sql2, function (err, rows, fields) {
                     connection.release();
 
-                    if (err) callback({status: 'error',message: error}, null);
-                    
+                    if (err) callback({ status: 'error', message: error }, null);
+
                     if (rows.length > 0) {
-                        for (var i = 0, len = rows.length; i < len; i++) {                
+                        for (var i = 0, len = rows.length; i < len; i++) {
                             user.bodegas[i] = rows[i].idBodega;
                         }
                     }
@@ -60,14 +60,14 @@ portalModel.login = function (username, callback) {
 
         });
     });
-    
+
 }
 
 portalModel.traficosDescarga = function (id_bodega, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "t.id AS id_trafico, " +
@@ -82,7 +82,7 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
                 callback(null, results);
@@ -103,7 +103,7 @@ portalModel.traficosOrdenes = function (id_bodega, fecha, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "t.id AS id_trafico, " +
@@ -119,7 +119,7 @@ portalModel.traficosOrdenes = function (id_bodega, fecha, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
                 callback(null, results);
@@ -140,7 +140,7 @@ portalModel.bodegas = function (id_user, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "id AS id_bodega " +
@@ -149,7 +149,7 @@ portalModel.bodegas = function (id_user, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
                 callback(null, results);
@@ -163,14 +163,14 @@ portalModel.bodegas = function (id_user, callback) {
         });
 
     });
-    
+
 }
 
 portalModel.detalleTrafico = function (id_trafico, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "t.idBodega as id_bodega," +
@@ -192,9 +192,9 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
-            
+
             if (results.length > 0) {
                 callback(null, results);
             } else {
@@ -205,7 +205,7 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             }
 
         });
-    
+
     });
 
 }
@@ -214,7 +214,7 @@ portalModel.comentarios = function (id_trafico, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "c.id, " +
@@ -226,16 +226,16 @@ portalModel.comentarios = function (id_trafico, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({status: 'No data found', message: 'Reference ID does not have comments.'}, null);
+                callback({ status: 'No data found', message: 'Reference ID does not have comments.' }, null);
             }
 
         });
-    
+
     });
 
 }
@@ -244,7 +244,7 @@ portalModel.discrepancias = function (id_trafico, callback) {
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         var sql = "SELECT " +
             "c.id, " +
@@ -256,16 +256,16 @@ portalModel.discrepancias = function (id_trafico, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({status: 'No data found', message: 'Reference ID does not have comments.'}, null);
+                callback({ status: 'No data found', message: 'Reference ID does not have comments.' }, null);
             }
 
         });
-    
+
     });
 
 }
@@ -274,18 +274,18 @@ portalModel.agregarComentario = function (id_trafico, id_user, message, callback
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
-        connection.query('INSERT INTO trafico_comentarios SET ?', {idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss')}, function (error, results, fields) {
+        connection.query('INSERT INTO trafico_comentarios SET ?', { idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss') }, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.insertId) {
-                callback(null, {'id_comment': results.insertId});
+                callback(null, { 'id_comment': results.insertId });
             }
 
         });
-    
+
     });
 
 }
@@ -294,18 +294,18 @@ portalModel.agregarDiscrepancia = function (id_trafico, id_user, message, callba
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
-        connection.query('INSERT INTO trafico_discrepancias SET ?', {idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss')}, function (error, results, fields) {
+        connection.query('INSERT INTO trafico_discrepancias SET ?', { idTrafico: id_trafico, idUsuario: id_user, mensaje: message, creado: moment().format('YYYY-MM-DD HH:mm:ss') }, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
             if (results.insertId) {
-                callback(null, {'id_comment': results.insertId});
+                callback(null, { 'id_comment': results.insertId });
             }
 
         });
-    
+
     });
 
 }
@@ -314,16 +314,16 @@ portalModel.referenciaDescarga = function (id_trafico, id_user, unload_date, cal
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         connection.query('UPDATE traficos SET fechaDescarga = ? WHERE id = ?', [unload_date, id_trafico], function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
-            callback(null, {'updated': true});
+            callback(null, { 'updated': true });
 
         });
-    
+
     });
 
 }
@@ -332,16 +332,98 @@ portalModel.referenciaCarga = function (id_trafico, id_user, load_date, callback
 
     db.getConnection(function (err, connection) {
 
-        if (err) callback({ status: 'error', message: err}, null);
+        if (err) callback({ status: 'error', message: err }, null);
 
         connection.query('UPDATE traficos SET fechaCarga = ? WHERE id = ?', [load_date, id_trafico], function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err}, null);
+            if (err) callback({ status: 'error', message: err }, null);
 
-            callback(null, {'updated': true});
+            callback(null, { 'updated': true });
 
         });
-    
+
+    });
+
+}
+
+portalModel.obtenerBultos = function (id_trafico, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT " +
+            "b.id AS id_bulto, " +
+            "u.nombre, " +
+            "b.dano, " +
+            "b.observacion, " +
+            "b.qr " +
+            "FROM trafico_bultos AS b " +
+            "LEFT JOIN usuarios AS u ON u.id = b.idUsuario " +
+            "WHERE b.idTrafico = " + db.escape(id_trafico) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({ status: 'No data found', message: 'Reference ID does not have comments.' }, null);
+            }
+
+        });
+
+    });
+
+}
+
+portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, observacion, qr, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        connection.query('INSERT INTO trafico_bultos SET ?',
+            {
+                idBodega: id_bodega,
+                idTrafico: id_trafico,
+                idUsuario: id_user,
+                observacion: observacion,
+                dano: dano,
+                qr: qr,
+                creado: moment().format('YYYY-MM-DD HH:mm:ss')
+            },
+            function (error, results, fields) {
+                connection.release();
+                if (err) callback({ status: 'error', message: err }, null);
+
+                if (results.insertId) {
+                    callback(null, { 'id_bulto': results.insertId });
+                }
+
+            });
+
+    });
+
+}
+
+
+portalModel.actualizarBulto = function (id_bulto, dano, observacion, qr, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        connection.query('UPDATE trafico_bultos SET dano = ?, observacion = ?, qr = ?, actualizado = ? WHERE id = ?', 
+        [dano, observacion, qr, moment().format('YYYY-MM-DD HH:mm:ss'), id_bulto], function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            callback(null, { 'updated': true });
+
+        });
+
     });
 
 }
