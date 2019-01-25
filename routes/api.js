@@ -2,6 +2,10 @@ const express = require('express');
 const moment = require('moment');
 const jwt = require('jsonwebtoken');
 
+const multer = require("multer");
+const fs = require('fs-extra');
+const mime = require('mime');
+
 moment.updateLocale('en');
 
 var router = express.Router();
@@ -727,7 +731,7 @@ router.post('/agregar-bulto', function (req, res) {
 router.post('/actualizar-bulto', function (req, res) {
 
     const token = req.headers['x-access-token'];
-    const id_bulto = req.body.id_bodega;
+    const id_bulto = req.body.id_bulto;
     const dano = req.body.dano;
     const observacion = req.body.observacion;
     const qr = req.body.qr;
@@ -737,9 +741,9 @@ router.post('/actualizar-bulto', function (req, res) {
         message: 'No token provided.'
     });
 
-    if (!qr) return res.status(401).send({
+    if (!id_bulto) return res.status(401).send({
         error: true,
-        message: 'QR is necessary.'
+        message: 'Package ID is necessary.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -770,6 +774,46 @@ router.post('/actualizar-bulto', function (req, res) {
         });
 
     });
+
+});
+
+const upload = multer({dest: "D:\\xampp\\tmp"});
+
+router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_bulto = req.body.id_bulto;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    if (!id_bulto) return res.status(401).send({
+        error: true,
+        message: 'Package ID is necessary.'
+    });
+
+    if(req.file) {
+
+        var filename_out = req.file.destination + "\\" + req.file.originalname;
+
+        if (!fs.existsSync(filename_out)) {
+            fs.move(req.file.path, filename_out, function (err) {
+                if (err) {
+                    return console.error(err);
+                }
+            });
+        }
+        console.log(mime.getExtension(req.file.mimetype));
+        res.json(req.file);
+    }
 
 });
 
