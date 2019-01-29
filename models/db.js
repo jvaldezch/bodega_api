@@ -184,6 +184,8 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.contenedorCajaEntrada AS caja_entrada, " +
             "t.contenedorCaja as caja, " +
             "t.lineaTransporte as linea_transporte, " +
+            "t.fechaSalida as fecha_salida, " +
+            "t.fechaRevision as fecha_revision, " +
             "t.fechaDescarga as fecha_descarga, " +
             "t.fechaCarga as fecha_carga " +
             "FROM traficos t " +
