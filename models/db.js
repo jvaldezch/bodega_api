@@ -78,7 +78,44 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
             "t.contenedorCajaEntrada AS caja_entrada " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
-            "WHERE t.idBodega = " + db.escape(id_bodega) + ";";
+            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.contenedorCajaEntrada IS NOT NULL;";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({
+                    status: 'No data found',
+                    message: false
+                }, null);
+            }
+
+        });
+
+    });
+
+}
+
+portalModel.traficosCarga = function (id_bodega, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT " +
+            "t.id AS id_trafico, " +
+            "t.rfcCliente AS rfc_cliente, " +
+            "c.nombre AS nombre_cliente, " +
+            "t.referencia, " +
+            "t.bultos, " +
+            "t.ordenCarga AS orden_salida, " +
+            "t.contenedorCajaSalida AS caja_salida " +
+            "FROM traficos t " +
+            "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.ordenCarga IS NOT NULL;";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
