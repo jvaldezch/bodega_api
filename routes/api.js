@@ -6,6 +6,9 @@ const multer = require("multer");
 const fs = require('fs-extra');
 const mime = require('mime');
 
+const qrcode = require('qrcode');
+const uuidv4 = require('uuid/v4');
+
 moment.updateLocale('en');
 
 var router = express.Router();
@@ -715,7 +718,7 @@ router.post('/agregar-bulto', function (req, res) {
     const id_user = req.body.id_user;
     const dano = req.body.dano;
     const observacion = req.body.observacion;
-    const qr = req.body.qr;
+    const uuid = req.body.uuid;
 
     if (!token) return res.status(401).send({
         auth: false,
@@ -737,9 +740,9 @@ router.post('/agregar-bulto', function (req, res) {
         message: 'User ID is necessary.'
     });
 
-    if (!qr) return res.status(401).send({
+    if (!uuid) return res.status(401).send({
         error: true,
-        message: 'QR is necessary.'
+        message: 'UUID is necessary.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -749,7 +752,7 @@ router.post('/agregar-bulto', function (req, res) {
             message: 'Failed to authenticate token.'
         });
 
-        portalModel.agregarBulto(id_bodega, id_trafico, id_user, dano, observacion, qr, function (error, results) {
+        portalModel.agregarBulto(id_bodega, id_trafico, id_user, dano, observacion, uuid, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -779,7 +782,7 @@ router.post('/actualizar-bulto', function (req, res) {
     const id_bulto = req.body.id_bulto;
     const dano = req.body.dano;
     const observacion = req.body.observacion;
-    const qr = req.body.qr;
+    const uuid = req.body.uuid;
 
     if (!token) return res.status(401).send({
         auth: false,
@@ -798,7 +801,7 @@ router.post('/actualizar-bulto', function (req, res) {
             message: 'Failed to authenticate token.'
         });
 
-        portalModel.actualizarBulto(id_bulto, dano, observacion, qr, function (error, results) {
+        portalModel.actualizarBulto(id_bulto, dano, observacion, uuid, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -859,6 +862,63 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
         console.log(mime.getExtension(req.file.mimetype));
         res.json(req.file);
     }
+
+});
+
+router.get('/imprimir-qr', function (req, res) {
+    
+    var arr = {
+        'uuid': uuidv4(),
+        'id_trafico': 345523,
+        'referencia': '18E-888347',
+        'rfc_cliente': 'JMM931208JY9',
+        'id_bulto': 1,
+        'bulto': 1
+    }
+
+    qrcode.toDataURL(JSON.stringify(arr), function (err, url) {
+
+        console.log(arr);
+
+        res.render('imprimir-qr', { qr: url });
+
+      });
+});
+
+router.post('/buscar-uuid', function (req, res) {
+    
+    const token = req.headers['x-access-token'];
+    const uuid = req.body.uuid;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!uuid) return res.status(401).send({
+        error: true,
+        message: 'UUID is required.'
+    });
+
+    portalModel.buscarQr(uuid, function (error, results) {
+        if (error) {
+
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.status(500).send({
+                "error": true,
+                'message': error
+            });
+
+        } else {
+
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.status(200).send({
+                success: true,
+                results: results
+            });
+
+        }
+    });
 
 });
 

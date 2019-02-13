@@ -417,7 +417,7 @@ portalModel.obtenerBultos = function (id_trafico, callback) {
 
 }
 
-portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, observacion, qr, callback) {
+portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, observacion, uuid, callback) {
 
     db.getConnection(function (err, connection) {
 
@@ -430,7 +430,7 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
                 idUsuario: id_user,
                 observacion: observacion,
                 dano: dano,
-                qr: qr,
+                uuid: uuid,
                 creado: moment().format('YYYY-MM-DD HH:mm:ss')
             },
             function (error, results, fields) {
@@ -447,19 +447,42 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
 
 }
 
-
-portalModel.actualizarBulto = function (id_bulto, dano, observacion, qr, callback) {
+portalModel.actualizarBulto = function (id_bulto, dano, observacion, uuid, callback) {
 
     db.getConnection(function (err, connection) {
 
         if (err) callback({ status: 'error', message: err }, null);
 
         connection.query('UPDATE trafico_bultos SET dano = ?, observacion = ?, qr = ?, actualizado = ? WHERE id = ?', 
-        [dano, observacion, qr, moment().format('YYYY-MM-DD HH:mm:ss'), id_bulto], function (error, results, fields) {
+        [dano, observacion, uuid, moment().format('YYYY-MM-DD HH:mm:ss'), id_bulto], function (error, results, fields) {
             connection.release();
             if (err) callback({ status: 'error', message: err }, null);
 
             callback(null, { 'updated': true });
+
+        });
+
+    });
+
+}
+
+portalModel.buscarQr = function (uuid, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT id AS id_bulto FROM trafico_bultos WHERE uuid = " + db.escape(uuid) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({ status: 'No data found', message: 'UUID not found.' }, null);
+            }
 
         });
 
