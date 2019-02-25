@@ -431,7 +431,7 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
                 observacion: observacion,
                 dano: dano,
                 uuid: uuid,
-                creado: moment().format('YYYY-MM-DD HH:mm:ss')
+                escaneado: moment().format('YYYY-MM-DD HH:mm:ss')
             },
             function (error, results, fields) {
                 connection.release();
@@ -472,13 +472,18 @@ portalModel.buscarQr = function (uuid, callback) {
 
         if (err) callback({ status: 'error', message: err }, null);
 
-        var sql = "SELECT id AS id_bulto FROM trafico_bultos WHERE uuid = " + db.escape(uuid) + ";";
+        var sql = "SELECT id AS id_bulto, escaneado FROM trafico_bultos WHERE uuid = " + db.escape(uuid) + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
             if (err) callback({ status: 'error', message: err }, null);
 
             if (results.length > 0) {
+                if (results[0].escaneado == null) {
+                    results[0].escaneado = false;
+                } else {
+                    results[0].escaneado = true;
+                }
                 callback(null, results);
             } else {
                 callback({ status: 'No data found', message: 'UUID not found.' }, null);
