@@ -876,6 +876,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                         carpeta = path.dirname(filename_out);
                         imagen = path.basename(filename_out);
                         miniatura = null;
+                        id_status = null;
 
                         filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
                         miniatura = path.basename(filename_thumb);
@@ -888,7 +889,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                         }, function(files, err, stdout, stderr) {
                         });
 
-                        portalModel.agregarImagen(id_trafico, id_bulto, carpeta, imagen, miniatura, function (error, results) {
+                        portalModel.agregarImagen(id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, function (error, results) {
                             if (error) {
 
                                 res.setHeader('Content-Type', 'application/json; charset=utf-8');

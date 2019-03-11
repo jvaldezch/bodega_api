@@ -448,7 +448,7 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
 
 }
 
-portalModel.agregarImagen = function (id_trafico, id_bulto, carpeta, imagen, miniatura, callback) {
+portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, callback) {
 
     db.getConnection(function (err, connection) {
 
@@ -458,6 +458,7 @@ portalModel.agregarImagen = function (id_trafico, id_bulto, carpeta, imagen, min
             {
                 idTrafico: id_trafico,
                 idBulto: id_bulto,
+                idEstatus: id_status,
                 carpeta: carpeta,
                 imagen: imagen,
                 miniatura: miniatura,
