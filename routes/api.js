@@ -9,6 +9,9 @@ const mime = require('mime');
 const qrcode = require('qrcode');
 const uuidv4 = require('uuid/v4');
 
+var path  = require('path');
+var thumb = require('node-thumbnail').thumb;
+
 moment.updateLocale('en');
 
 var router = express.Router();
@@ -825,7 +828,7 @@ router.post('/actualizar-bulto', function (req, res) {
 
 });
 
-const upload = multer({dest: "D:\\xampp\\tmp"});
+const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 
 router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
@@ -850,17 +853,80 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
     if(req.file) {
 
-        var filename_out = req.file.destination + "\\" + req.file.originalname;
+        portalModel.detalleTrafico(id_trafico, function (error, results) {
+            if (error) {
 
-        if (!fs.existsSync(filename_out)) {
-            fs.move(req.file.path, filename_out, function (err) {
-                if (err) {
-                    return console.error(err);
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else if (typeof results !== 'undefined' && results.length > 0) {
+
+                eta_date = moment(results[0].fecha_eta);
+
+                var filename_out = req.file.destination + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
+                    path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
+
+                if (!fs.existsSync(filename_out)) {
+
+                    fs.move(req.file.path, filename_out, function (err) {
+
+                        carpeta = path.dirname(filename_out);
+                        imagen = path.basename(filename_out);
+                        miniatura = null;
+
+                        filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
+                        miniatura = path.basename(filename_thumb);
+
+                        thumb({
+                            source: filename_out, 
+                            destination: path.dirname(filename_out),
+                            width: 340,
+                            suffix: '_thumb',
+                        }, function(files, err, stdout, stderr) {
+                        });
+
+                        portalModel.agregarImagen(id_trafico, id_bulto, carpeta, imagen, miniatura, function (error, results) {
+                            if (error) {
+
+                                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                                res.status(500).send({
+                                    "error": true,
+                                    'message': error
+                                });
+                
+                            } else {
+                
+                                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                                res.status(200).send({
+                                    success: true,
+                                    results: results
+                                });
+                
+                            }
+                        });
+
+                    });
+
+                } else {
+                    fs.unlinkSync(req.file.path);
+
+                    return res.status(401).send({
+                        error: true,
+                        message: 'Image already exists.'
+                    });    
                 }
-            });
-        }
-        console.log(mime.getExtension(req.file.mimetype));
-        res.json(req.file);
+
+            }
+        });
+
+    } else {
+        return res.status(401).send({
+            error: true,
+            message: 'Image is necessary.'
+        });
     }
 
 });

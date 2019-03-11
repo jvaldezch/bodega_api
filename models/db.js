@@ -224,7 +224,8 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.fechaSalida as fecha_salida, " +
             "t.fechaRevision as fecha_revision, " +
             "t.fechaDescarga as fecha_descarga, " +
-            "t.fechaCarga as fecha_carga " +
+            "t.fechaCarga as fecha_carga, " +
+            "t.fechaEta as fecha_eta " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "WHERE t.id = " + db.escape(id_trafico) + ";";
@@ -439,6 +440,35 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
 
                 if (results.insertId) {
                     callback(null, { 'id_bulto': results.insertId });
+                }
+
+            });
+
+    });
+
+}
+
+portalModel.agregarImagen = function (id_trafico, id_bulto, carpeta, imagen, miniatura, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        connection.query('INSERT INTO trafico_imagenes SET ?',
+            {
+                idTrafico: id_trafico,
+                idBulto: id_bulto,
+                carpeta: carpeta,
+                imagen: imagen,
+                miniatura: miniatura,
+                creado: moment().format('YYYY-MM-DD HH:mm:ss')
+            },
+            function (error, results, fields) {
+                connection.release();
+                if (err) callback({ status: 'error', message: err }, null);
+
+                if (results.insertId) {
+                    callback(null, { 'id_imagen': results.insertId });
                 }
 
             });
