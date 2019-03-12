@@ -22,6 +22,13 @@ router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
 });
 
+function base64_encode(file) {
+    // read binary data
+    var bitmap = fs.readFileSync(file);
+    // convert binary data to base64 encoded string
+    return new Buffer(bitmap).toString('base64');
+}
+
 router.post('/login', function (req, res, next) {
 
     const username = req.body.username;
@@ -117,7 +124,7 @@ router.post('/bodegas', function (req, res) {
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -296,7 +303,7 @@ router.post('/detalle-trafico', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -342,7 +349,7 @@ router.post('/discrepancias', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -388,7 +395,7 @@ router.post('/comentarios', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -436,17 +443,17 @@ router.post('/agregar-comentario', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     if (!message) return res.status(401).send({
         error: true,
-        message: 'Message is necessary.'
+        message: 'Message is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -494,17 +501,17 @@ router.post('/agregar-discrepancia', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     if (!message) return res.status(401).send({
         error: true,
-        message: 'Message is necessary.'
+        message: 'Message is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -552,17 +559,17 @@ router.post('/referencia-descarga', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     if (!unload_date) return res.status(401).send({
         error: true,
-        message: 'Unload date is necessary.'
+        message: 'Unload date is required.'
     });
 
     if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
@@ -616,17 +623,17 @@ router.post('/referencia-carga', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     if (!load_date) return res.status(401).send({
         error: true,
-        message: 'Load date is necessary.'
+        message: 'Load date is required.'
     });
 
     if (!moment(load_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
@@ -679,7 +686,7 @@ router.post('/obtener-bultos', function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -730,22 +737,22 @@ router.post('/agregar-bulto', function (req, res) {
 
     if (!id_bodega) return res.status(401).send({
         error: true,
-        message: 'Warehouse ID is necessary.'
+        message: 'Warehouse ID is required.'
     });
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_user) return res.status(401).send({
         error: true,
-        message: 'User ID is necessary.'
+        message: 'User ID is required.'
     });
 
     if (!uuid) return res.status(401).send({
         error: true,
-        message: 'UUID is necessary.'
+        message: 'UUID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -794,7 +801,7 @@ router.post('/actualizar-bulto', function (req, res) {
 
     if (!id_bulto) return res.status(401).send({
         error: true,
-        message: 'Package ID is necessary.'
+        message: 'Package ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
@@ -843,53 +850,85 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
     if (!id_trafico) return res.status(401).send({
         error: true,
-        message: 'Traffic ID is necessary.'
+        message: 'Traffic ID is required.'
     });
 
     if (!id_bulto) return res.status(401).send({
         error: true,
-        message: 'Package ID is necessary.'
+        message: 'Package ID is required.'
     });
 
-    if(req.file) {
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        portalModel.detalleTrafico(id_trafico, function (error, results) {
-            if (error) {
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
+        if(req.file) {
 
-            } else if (typeof results !== 'undefined' && results.length > 0) {
+            portalModel.detalleTrafico(id_trafico, function (error, results) {
+                if (error) {
 
-                eta_date = moment(results[0].fecha_eta);
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                    res.status(500).send({
+                        "error": true,
+                        'message': error
+                    });
 
-                var filename_out = req.file.destination + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
-                    path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
+                } else if (typeof results !== 'undefined' && results.length > 0) {
 
-                if (!fs.existsSync(filename_out)) {
+                    eta_date = moment(results[0].fecha_eta);
 
-                    fs.move(req.file.path, filename_out, function (err) {
+                    var filename_out = req.file.destination + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
+                        path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
 
-                        carpeta = path.dirname(filename_out);
-                        imagen = path.basename(filename_out);
-                        miniatura = null;
-                        id_status = null;
+                    if (!fs.existsSync(filename_out)) {
 
-                        filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
-                        miniatura = path.basename(filename_thumb);
+                        fs.move(req.file.path, filename_out, function (err) {
 
-                        thumb({
-                            source: filename_out, 
-                            destination: path.dirname(filename_out),
-                            width: 340,
-                            suffix: '_thumb',
-                        }, function(files, err, stdout, stderr) {
+                            carpeta = path.dirname(filename_out);
+                            imagen = path.basename(filename_out);
+                            miniatura = null;
+                            id_status = 1;
+
+                            filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
+                            miniatura = path.basename(filename_thumb);
+
+                            thumb({
+                                source: filename_out, 
+                                destination: path.dirname(filename_out),
+                                width: 340,
+                                suffix: '_thumb',
+                            }, function(files, err, stdout, stderr) {
+                            });
+
+                            portalModel.agregarImagen(id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, function (error, results) {
+                                if (error) {
+
+                                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                                    res.status(500).send({
+                                        "error": true,
+                                        'message': error
+                                    });
+                    
+                                } else {
+                    
+                                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                                    res.status(200).send({
+                                        success: true,
+                                        results: results
+                                    });
+                    
+                                }
+                            });
+
                         });
 
-                        portalModel.agregarImagen(id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, function (error, results) {
+                    } else {
+                        fs.unlinkSync(req.file.path);
+
+                        portalModel.buscarImagen(id_trafico, req.file.originalname, function (error, results) {
                             if (error) {
 
                                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -903,32 +942,212 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                                 res.status(200).send({
                                     success: true,
-                                    results: results
+                                    results: {
+                                        "id_imagen" : results[0].id_imagen
+                                    }
                                 });
                 
                             }
                         });
 
-                    });
+                    }
 
-                } else {
-                    fs.unlinkSync(req.file.path);
-
-                    return res.status(401).send({
-                        error: true,
-                        message: 'Image already exists.'
-                    });    
                 }
+            });
+
+        } else {
+            return res.status(401).send({
+                error: true,
+                message: 'Image is necessary.'
+            });
+        }
+    });
+
+});
+
+router.post('/borrar-imagen', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_imagen = req.body.id_imagen;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is required.'
+    });
+
+    if (!id_imagen) return res.status(401).send({
+        error: true,
+        message: 'Imagen number is required.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.buscarImagen(id_trafico, id_imagen, function (error, results) {
+            if (error) {
+
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+
+            } else {
+
+                filename_img = results.carpeta + path.sep + results.imagen;
+                filename_tmb = results.carpeta + path.sep + results.miniatura;
+
+                portalModel.borrarImagen(id_trafico, id_imagen, function (error, results) {
+                    if (error) {
+            
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.status(500).send({
+                            "error": true,
+                            'message': error
+                        });
+            
+                    } else {
+
+                        fs.unlinkSync(filename_img);
+                        fs.unlinkSync(filename_tmb);
+
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.status(200).send({
+                            success: true,
+                            results: results
+                        });
+
+                    }
+                });
 
             }
         });
 
-    } else {
-        return res.status(401).send({
-            error: true,
-            message: 'Image is necessary.'
+    });
+
+});
+
+router.post('/obtener-imagenes', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is necessary.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
         });
-    }
+
+        portalModel.obtenerImagenes(id_trafico, function (error, results) {
+            if (error) {
+    
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+    
+            } else {
+    
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(200).send({
+                    success: true,
+                    results: results
+                });
+    
+            }
+        });
+
+    });
+
+});
+
+router.post('/obtener-imagen', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_imagen = req.body.id_imagen;
+    const id_trafico = req.body.id_trafico;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_imagen) return res.status(401).send({
+        error: true,
+        message: 'Image ID is required.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is required.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return res.status(500).send({
+            auth: false,
+            message: 'Failed to authenticate token.'
+        });
+
+        portalModel.obtenerImagen(id_imagen, id_trafico, function (error, results) {
+            if (error) {
+    
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.status(500).send({
+                    "error": true,
+                    'message': error
+                });
+    
+            } else {
+
+                filename_out = results[0].carpeta + path.sep + results[0].imagen;
+                if (fs.existsSync(filename_out)) {
+
+                    var base64str = base64_encode(filename_out);
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                    res.status(200).send({
+                        success: true,
+                        results: {
+                            'image' : base64str
+                        }
+                    });
+
+                } else {
+
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                    res.status(500).send({
+                        "error": true,
+                        'message': 'Image file not found!'
+                    });
+
+                }
+    
+            }
+        });
+
+    });
 
 });
 

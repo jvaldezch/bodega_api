@@ -478,6 +478,98 @@ portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, 
 
 }
 
+portalModel.buscarImagen = function (id_trafico, id_imagen, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT * FROM trafico_imagenes WHERE idTrafico = " + id_trafico + " AND id = " + db.escape(id_imagen) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results[0]);
+            } else {
+                callback({ status: 'No data found', message: 'Image ID is not found.' }, null);
+            }
+
+        });
+
+    });
+
+}
+
+portalModel.borrarImagen = function (id_trafico, id_imagen, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "DELETE FROM trafico_imagenes WHERE idTrafico = " + id_trafico + " AND id = " + db.escape(id_imagen) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            callback(null, {message: 'Image deleted.' });
+
+        });
+
+    });
+
+}
+
+portalModel.obtenerImagenes = function (id_trafico, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT id AS id_imagen FROM trafico_imagenes WHERE idTrafico = " + db.escape(id_trafico) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({ status: 'No data found', message: 'Reference ID does not have packages.' }, null);
+            }
+
+        });
+
+    });
+
+}
+
+portalModel.obtenerImagen = function (id_imagen, id_trafico, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT carpeta, imagen FROM trafico_imagenes WHERE id = " + db.escape(id_imagen) + " AND idTrafico = " + db.escape(id_trafico) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ status: 'error', message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback({ status: 'No data found', message: 'Reference ID does not have packages.' }, null);
+            }
+
+        });
+
+    });
+
+}
+
 portalModel.actualizarBulto = function (id_bulto, dano, observacion, uuid, callback) {
 
     db.getConnection(function (err, connection) {
