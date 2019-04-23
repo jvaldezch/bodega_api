@@ -574,7 +574,7 @@ router.post('/referencia-descarga', function (req, res) {
 
     if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
         error: true,
-        message: 'Unload date is not .'
+        message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
     });
 
 
@@ -793,6 +793,9 @@ router.post('/actualizar-bulto', function (req, res) {
     const dano = req.body.dano;
     const observacion = req.body.observacion;
     const uuid = req.body.uuid;
+    const unload_date = req.body.unload_date;
+    const load_date = req.body.load_date;
+    const revision_date = req.body.revision_date;
 
     if (!token) return res.status(401).send({
         auth: false,
@@ -804,6 +807,21 @@ router.post('/actualizar-bulto', function (req, res) {
         message: 'Package ID is required.'
     });
 
+    if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+    });
+
+    if (!moment(load_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Load date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+    });
+
+    if (!moment(revision_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Revision date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+    });
+
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
         if (err) return res.status(500).send({
@@ -811,7 +829,7 @@ router.post('/actualizar-bulto', function (req, res) {
             message: 'Failed to authenticate token.'
         });
 
-        portalModel.actualizarBulto(id_bulto, dano, observacion, uuid, function (error, results) {
+        portalModel.actualizarBulto(id_bulto, dano, observacion, uuid, unload_date, load_date, revision_date, function (error, results) {
             if (error) {
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');

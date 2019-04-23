@@ -397,7 +397,10 @@ portalModel.obtenerBultos = function (id_trafico, callback) {
             "u.nombre, " +
             "b.dano, " +
             "b.observacion, " +
-            "b.qr " +
+            "b.qr, " +
+            "DATE_FORMAT(b.descarga, '%Y-%m-%d %H:%i:%s') AS unload_date, " +
+            "DATE_FORMAT(b.carga, '%Y-%m-%d %H:%i:%s') AS load_date, " +
+            "DATE_FORMAT(b.revision, '%Y-%m-%d %H:%i:%s') AS revision_date " +
             "FROM trafico_bultos AS b " +
             "LEFT JOIN usuarios AS u ON u.id = b.idUsuario " +
             "WHERE b.idTrafico = " + db.escape(id_trafico) + ";";
@@ -570,14 +573,14 @@ portalModel.obtenerImagen = function (id_imagen, id_trafico, callback) {
 
 }
 
-portalModel.actualizarBulto = function (id_bulto, dano, observacion, uuid, callback) {
+portalModel.actualizarBulto = function (id_bulto, dano, observacion, uuid, descarga, carga, revision, callback) {
 
     db.getConnection(function (err, connection) {
 
         if (err) callback({ status: 'error', message: err }, null);
 
-        connection.query('UPDATE trafico_bultos SET dano = ?, observacion = ?, qr = ?, actualizado = ? WHERE id = ?', 
-        [dano, observacion, uuid, moment().format('YYYY-MM-DD HH:mm:ss'), id_bulto], function (error, results, fields) {
+        connection.query('UPDATE trafico_bultos SET dano = ?, observacion = ?, qr = ?, carga = ?, descarga = ?, revision = ?, actualizado = ? WHERE id = ?', 
+        [dano, observacion, uuid, descarga, carga, revision, moment().format('YYYY-MM-DD HH:mm:ss'), id_bulto], function (error, results, fields) {
             connection.release();
             if (err) callback({ status: 'error', message: err }, null);
 
