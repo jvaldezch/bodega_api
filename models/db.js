@@ -213,6 +213,7 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.idBodega as id_bodega," +
             "t.idCliente as id_cliente, " +
             "t.referencia, " +
+            "t.pedimento AS pedimento, " +
             "t.rfcCliente AS rfc_cliente, " +
             "c.nombre as nombre_cliente, " +
             "t.bultos, " +
@@ -221,6 +222,9 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.contenedorCajaEntrada AS caja_entrada, " +
             "t.contenedorCaja as caja, " +
             "t.lineaTransporte as linea_transporte, " +
+            "t.ubicacion as ubicacion, " +
+            "t.pesoKg as peso_kg, " +
+            "t.proveedores as proveedores, " +
             "t.fechaSalida as fecha_salida, " +
             "t.fechaRevision as fecha_revision, " +
             "t.fechaDescarga as fecha_descarga, " +
