@@ -963,7 +963,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                                 res.status(200).send({
                                     success: true,
                                     results: {
-                                        "id_imagen" : results[0].id_imagen
+                                        "message" : "Image exists"
                                     }
                                 });
                 
