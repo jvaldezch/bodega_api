@@ -492,7 +492,7 @@ portalModel.comprobarImagen = function (id_trafico, nombre, callback) {
 
         if (err) callback({ status: 'error', message: err }, null);
 
-        var sql = "SELECT * FROM trafico_imagenes WHERE idTrafico = " + id_trafico + " AND nombre = " + db.escape(nombre) + ";";
+        var sql = "SELECT id AS id_image FROM trafico_imagenes WHERE idTrafico = " + id_trafico + " AND nombre = " + db.escape(nombre) + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();

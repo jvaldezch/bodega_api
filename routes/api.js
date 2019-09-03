@@ -951,7 +951,6 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
                         portalModel.comprobarImagen(id_trafico, imagen, function (error, results) {
                             if (error) {
-
                                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                                 res.status(500).send({
                                     "error": true,
