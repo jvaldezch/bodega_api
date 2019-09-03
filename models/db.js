@@ -455,7 +455,7 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
 
 }
 
-portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, callback) {
+portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, nombre, callback) {
 
     db.getConnection(function (err, connection) {
 
@@ -469,6 +469,7 @@ portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, 
                 carpeta: carpeta,
                 imagen: imagen,
                 miniatura: miniatura,
+                nombre: imagen,
                 creado: moment().format('YYYY-MM-DD HH:mm:ss')
             },
             function (error, results, fields) {

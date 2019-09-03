@@ -1236,4 +1236,59 @@ router.post('/buscar-uuid', function (req, res) {
 
 });
 
+function sendErrHandler(res, err) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.status(200).send({
+        success: false,
+        message: err
+    });
+    return true;
+}
+
+function sendEmptyResponse(res, message = "") {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.status(200).send({
+        success: false,
+        response: [],
+        message: message
+    });
+    return true;
+}
+
+function sendSuccessResponse(res, response) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.status(200).send({
+        success: true,
+        response: response
+    });
+    return true;
+}
+
+router.get('/qr-reader', function (req, res) {
+    var QrCode = require('qrcode-reader');
+    var Jimp = require("jimp");
+    var buffer = fs.readFileSync('D:\\Temp\\20190829_182013.png');
+    Jimp.read(buffer, function(err, image) {
+        if (err) {
+            return sendErrHandler(res, err);
+        }
+        var qr = new QrCode();
+        qr.callback = function(err, value) {
+            if (err) {
+                return sendErrHandler(res, err);
+            }
+            if (value) {
+                console.log(value.result);
+                var correctJson = value.result.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
+                return sendSuccessResponse(res, JSON.parse(correctJson));
+            } else {
+                return sendEmptyResponse(res, "Not a valid QR");
+            }
+        };
+        qr.decode(image.bitmap);
+
+    });
+
+});
+
 module.exports = router;
