@@ -898,7 +898,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
                     eta_date = moment(results[0].fecha_eta);
 
-                    var filename_out = req.file.destination + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
+                    var filename_out = req.file.destination + path.sep + results[0].siglas + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
                         path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
 
                     if (!fs.existsSync(filename_out)) {

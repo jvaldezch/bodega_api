@@ -229,9 +229,11 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.fechaRevision as fecha_revision, " +
             "t.fechaDescarga as fecha_descarga, " +
             "t.fechaCarga as fecha_carga, " +
-            "t.fechaEta as fecha_eta " +
+            "t.fechaEta as fecha_eta, " +
+            "b.siglas "
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "LEFT JOIN trafico_bodegas b ON t.idBodega = b.id "
             "WHERE t.id = " + db.escape(id_trafico) + ";";
 
         connection.query(sql, function (error, results, fields) {
