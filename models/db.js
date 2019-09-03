@@ -238,9 +238,9 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
-            if (err) callback({ status: 'error', message: err }, null);
-
-
+            if (err) 
+                callback({ status: 'error', message: err }, null);
+            console.log(results);
             if (results.length > 0) {
                 callback(null, results);
             } else {
