@@ -233,7 +233,7 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "b.siglas " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
-            "LEFT JOIN trafico_bodegas b ON t.idBodega = b.id "
+            "LEFT JOIN trafico_bodegas b ON t.idBodega = b.id " +
             "WHERE t.id = " + db.escape(id_trafico) + " LIMIT 1;";
 
         connection.query(sql, function (error, results, fields) {
