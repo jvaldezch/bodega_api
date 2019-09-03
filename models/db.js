@@ -456,7 +456,7 @@ portalModel.agregarBulto = function (id_bodega, id_trafico, id_user, dano, obser
 
 }
 
-portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, nombre, callback) {
+portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, callback) {
 
     db.getConnection(function (err, connection) {
 
@@ -475,12 +475,11 @@ portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, 
             },
             function (error, results, fields) {
                 connection.release();
-                if (err) callback({ status: 'error', message: err }, null);
-
+                if (error) 
+                    callback({ status: 'error', message: error }, null);
                 if (results.insertId) {
                     callback(null, { 'id_imagen': results.insertId });
                 }
-
             });
 
     });
