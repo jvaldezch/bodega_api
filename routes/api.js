@@ -944,9 +944,12 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                         });
 
                     } else {
-                        fs.unlinkSync(req.file.path);
+                        //fs.unlinkSync(req.file.path);
 
-                        portalModel.buscarImagen(id_trafico, req.file.originalname, function (error, results) {
+                        carpeta = path.dirname(filename_out);
+                        imagen = path.basename(filename_out);
+
+                        portalModel.buscarImagen(id_trafico, req.file.imagen, function (error, results) {
                             if (error) {
 
                                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
