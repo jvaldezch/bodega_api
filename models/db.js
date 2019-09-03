@@ -486,6 +486,27 @@ portalModel.agregarImagen = function (id_trafico, id_bulto, id_status, carpeta, 
 
 }
 
+portalModel.comprobarImagen = function (id_trafico, nombre, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ status: 'error', message: err }, null);
+
+        var sql = "SELECT * FROM trafico_imagenes WHERE idTrafico = " + id_trafico + " AND nombre = " + db.escape(nombre) + ";";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (error) callback({ status: 'error', message: error }, null);
+
+            if (results.length > 0) {
+                callback(null, results[0]);
+            } else {
+                callback({ status: 'No data found', message: 'No image found.' }, null);
+            }
+        });
+    });
+}
+
 portalModel.buscarImagen = function (id_trafico, id_imagen, callback) {
 
     db.getConnection(function (err, connection) {
@@ -503,11 +524,8 @@ portalModel.buscarImagen = function (id_trafico, id_imagen, callback) {
             } else {
                 callback({ status: 'No data found', message: 'Image ID is not found.' }, null);
             }
-
         });
-
     });
-
 }
 
 portalModel.borrarImagen = function (id_trafico, id_imagen, callback) {
