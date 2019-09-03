@@ -234,14 +234,12 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "LEFT JOIN trafico_bodegas b ON t.idBodega = b.id " +
-            "WHERE t.id = " + db.escape(id_trafico) + " LIMIT 1;";
+            "WHERE t.id = " + db.escape(id_trafico) + ";";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
             if (err) 
                 callback({ status: 'error', message: err }, null);
-            console.log(results);
-            console.log(results.length);
             if (results.length > 0) {
                 callback(null, results);
             } else {
