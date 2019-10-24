@@ -223,6 +223,7 @@ router.post('/cargas', function (req, res) {
 
         portalModel.traficosCarga(id_bodega, function (error, results) {
             if (error) {
+                console.log({"id_bodega": id_bodega ,"message":error});
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.status(500).send({
@@ -706,6 +707,7 @@ router.post('/obtener-bultos', function (req, res) {
                 });
 
             } else {
+                console.log(results);
 
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.status(200).send({
@@ -899,7 +901,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                     eta_date = moment(results[0].fecha_eta);
 
                     var filename_out = req.file.destination + path.sep + results[0].siglas + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
-                        path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
+                        path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname ; // colocar un timestamp
 
                     if (!fs.existsSync(filename_out)) {
 
@@ -1081,6 +1083,7 @@ router.post('/obtener-imagenes', function (req, res) {
 
         portalModel.obtenerImagenes(id_trafico, function (error, results) {
             if (error) {
+                console.log({"id_trafico": id_trafico ,"message":error});
     
                 res.setHeader('Content-Type', 'application/json; charset=utf-8');
                 res.status(500).send({

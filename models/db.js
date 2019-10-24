@@ -401,6 +401,7 @@ portalModel.obtenerBultos = function (id_trafico, callback) {
             "b.id AS id_bulto, " +
             "u.nombre, " +
             "b.dano, " +
+            "b.uuid, " +
             "b.observacion, " +
             "b.qr, " +
             "DATE_FORMAT(b.descarga, '%Y-%m-%d %H:%i:%s') AS unload_date, " +
@@ -563,7 +564,7 @@ portalModel.obtenerImagenes = function (id_trafico, callback) {
             if (results.length > 0) {
                 callback(null, results);
             } else {
-                callback({ status: 'No data found', message: 'Reference ID does not have packages.' }, null);
+                callback({ status: 'No data found', message: 'Reference ID does not have images.' }, null);
             }
 
         });
