@@ -843,6 +843,12 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                         let carpeta = path.dirname(filename_out);
                         let imagen = path.basename(filename_out);
 
+                        lggr.info({
+                            fecha: moment().format(),
+                            ip: req.connection.remoteAddress,
+                            action: 'subir-imagen',
+                            message: 'Image exists.' });
+
                         portalModel.comprobarImagen(id_trafico, imagen, function (error, results) {
                             if (error)
                                 return returnDBError(res, req, '/subir-imagen', error);
