@@ -9,14 +9,18 @@ const mime = require('mime');
 const qrcode = require('qrcode');
 const uuidv4 = require('uuid/v4');
 
-var path  = require('path');
-var thumb = require('node-thumbnail').thumb;
+const path  = require('path');
+const thumb = require('node-thumbnail').thumb;
+
+const lggr = require('../controllers/api_logger');
 
 moment.updateLocale('en');
 
-var router = express.Router();
+const router = express.Router();
 
-var portalModel = require('../models/db');
+const portalModel = require('../models/db');
+
+const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 
 router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
@@ -24,9 +28,70 @@ router.get('/', function (req, res, next) {
 
 function base64_encode(file) {
     // read binary data
-    var bitmap = fs.readFileSync(file);
+    let bitmap = fs.readFileSync(file);
     // convert binary data to base64 encoded string
     return new Buffer(bitmap).toString('base64');
+}
+
+function returnSuccessResult(res, results) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send({
+        success: true,
+        results: results
+    });
+}
+
+function returnTokenError(res, req, token, action, error) {
+
+    lggr.info({
+        fecha: moment().format(),
+        ip: req.connection.remoteAddress,
+        token: token,
+        action: action,
+        message: 'Failed to authenticate token.' });
+
+    return res.status(200).send({
+        error: true,
+        message: 'Failed to authenticate token.'
+    });
+
+}
+
+function returnError(res, message) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send({
+        error: true,
+        message: message
+    });
+}
+
+function returnDBEmpty(res, req, action, results) {
+
+    lggr.info({
+        fecha: moment().format(),
+        ip: req.connection.remoteAddress,
+        action: action,
+        message: results });
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send(results);
+
+}
+
+function returnDBError(res, req, action, error) {
+
+    lggr.info({
+        fecha: moment().format(),
+        action: action,
+        ip: req.connection.remoteAddress,
+        message: error });
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send({
+        error: true,
+        message: error
+    });
+
 }
 
 router.post('/login', function (req, res, next) {
@@ -39,55 +104,71 @@ router.post('/login', function (req, res, next) {
         portalModel.login(username, function (error, result) {
 
             if (error) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    'error': true,
-                    'message': error
-                });
+                return returnDBError(res, req, '/login', error);
 
             } else if (typeof result !== 'undefined') {
 
-                if (result.password.toString('latin1') === password) {
+                if (result.password !== undefined) {
+                    if (result.password.toString('latin1') === password) {
 
-                    var token = jwt.sign({
-                        id: result.id,
-                        username: username,
-                        email: result.email,
-                        patente: result.patente,
-                        aduana: result.aduana,
-                        bodegas: result.bodegas,
-                    }, process.env.WSSECRET, {
+                        let token = jwt.sign({
+                            id: result.id,
+                            username: username,
+                            email: result.email,
+                            patente: result.patente,
+                            aduana: result.aduana,
+                            bodegas: result.bodegas,
+                        }, process.env.WSSECRET, {
                             expiresIn: 86400 // expires in 24 hours
                         });
 
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    res.status(200).send({
-                        'success': true,
-                        'id_user': result.id,
-                        'email': result.email,
-                        'token': token
-                    });
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.status(200).send({
+                            'success': true,
+                            'id_user': result.id,
+                            'email': result.email,
+                            'token': token
+                        });
 
+                    } else {
+
+                        lggr.info({
+                            fecha: moment().format(),
+                            ip: req.connection.remoteAddress,
+                            username: username,
+                            message: 'Password is not valid.' });
+
+                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                        res.status(200).send({
+                            error: true,
+                            message: 'Password is not valid.'
+                        });
+                    }
                 } else {
 
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    res.status(500).send({
-                        'error': true,
-                        'message': 'Invalid password.'
-                    });
+                    lggr.info({
+                        fecha: moment().format(),
+                        ip: req.connection.remoteAddress,
+                        message: result });
 
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                    res.status(200).send(result);
                 }
             }
         });
 
     } else {
 
+        /*lggr.info({
+            fecha: moment().format(),
+            ip: req.connection.remoteAddress,
+            message: 'Username and password are necessary.' });
+
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.status(500).send({
-            'error': true,
-            'message': 'Username and password are neccesary'
-        });
+        res.status(200).send({
+            error: true,
+            message: 'Username and password are necessary.'
+        });*/
 
     }
 
@@ -95,7 +176,7 @@ router.post('/login', function (req, res, next) {
 
 router.post('/remember', function (req, res) {
 
-    var token = req.headers['x-access-token'];
+    const token = req.headers['x-access-token'];
 
     if (!token) return res.status(401).send({
         auth: false,
@@ -103,10 +184,9 @@ router.post('/remember', function (req, res) {
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err)
+            if (err) return returnTokenError(res, req, token, "/remember", err);
+
         res.status(200).send(decoded);
 
     });
@@ -117,36 +197,28 @@ router.post('/bodegas', function (req, res) {
     const token = req.headers['x-access-token'];
     const id_user = req.body.id_user;
 
-    if (!token) return res.status(401).send({
-        auth: false,
+    if (!token) return res.status(200).send({
+        error: true,
         message: 'No token provided.'
     });
 
-    if (!id_user) return res.status(401).send({
+    if (!id_user) return res.status(200).send({
         error: true,
         message: 'User ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/bodegas", err);
 
         portalModel.bodegas(id_user, function (error, results) {
-            if (error) {
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
+            if (error)
+                return returnDBError(res, req, '/bodegas', error);
+
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/bodegas", results);
             }
         });
 
@@ -159,40 +231,28 @@ router.post('/descargas', function (req, res) {
     const token = req.headers['x-access-token'];
     const id_bodega = req.body.id_bodega;
 
-    if (!token) return res.status(401).send({
-        auth: false,
+    if (!token) return res.status(200).send({
+        error: true,
         message: 'No token provided.'
     });
 
-    if (!id_bodega) return res.status(401).send({
+    if (!id_bodega) return res.status(200).send({
         error: true,
-        message: 'ID is required.'
+        message: 'Warehouse ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/descargas", err);
 
         portalModel.traficosDescarga(id_bodega, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/descargas', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/descargas", results);
             }
         });
     });
@@ -204,40 +264,28 @@ router.post('/cargas', function (req, res) {
     const token = req.headers['x-access-token'];
     const id_bodega = req.body.id_bodega;
 
-    if (!token) return res.status(401).send({
+    if (!token) return res.status(200).send({
         auth: false,
         message: 'No token provided.'
     });
 
-    if (!id_bodega) return res.status(401).send({
+    if (!id_bodega) return res.status(200).send({
         error: true,
-        message: 'ID is required.'
+        message: 'Warehouse ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/cargas", err);
 
         portalModel.traficosCarga(id_bodega, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/cargas', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/cargas", results);
             }
         });
     });
@@ -251,41 +299,30 @@ router.post('/ordenes', function (req, res) {
     const id_bodega = req.body.id_bodega;
     const fecha = req.body.fecha;
 
-    if (!token) return res.status(401).send({
-        auth: false,
+    if (!token) return res.status(200).send({
+        error: true,
         message: 'No token provided.'
     });
 
-    if (!fecha) return res.status(401).send({
+    if (!fecha) return res.status(200).send({
         error: true,
         message: 'Date is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/ordenes", err);
 
         portalModel.traficosOrdenes(id_bodega, fecha, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/ordenes', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/ordenes", results);
             }
+
         });
     });
 
@@ -296,40 +333,28 @@ router.post('/detalle-trafico', function (req, res) {
     const token = req.headers['x-access-token'];
     const id_trafico = req.body.id_trafico;
 
-    if (!token) return res.status(401).send({
-        auth: false,
+    if (!token) return res.status(200).send({
+        error: true,
         message: 'No token provided.'
     });
 
-    if (!id_trafico) return res.status(401).send({
+    if (!id_trafico) return res.status(200).send({
         error: true,
         message: 'Traffic ID is required.'
     });
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/detalle-trafico", err);
 
         portalModel.detalleTrafico(id_trafico, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/detalle-trafico', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/detalle-trafico", results);
             }
         });
 
@@ -354,29 +379,18 @@ router.post('/discrepancias', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/discrepancias", err);
 
         portalModel.discrepancias(id_trafico, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/discrepancias', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/discrepancias", results);
             }
+
         });
 
     });
@@ -400,29 +414,18 @@ router.post('/comentarios', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/comentarios", err);
 
         portalModel.comentarios(id_trafico, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/comentarios', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else if (typeof results !== 'undefined' && results.length > 0) {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/comentarios", results);
             }
+
         });
 
     });
@@ -458,29 +461,13 @@ router.post('/agregar-comentario', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/agregar-comentario", err);
 
         portalModel.agregarComentario(id_trafico, id_user, message, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/agregar-comentario', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
+            return returnSuccessResult(res, results);
         });
 
     });
@@ -516,29 +503,13 @@ router.post('/agregar-discrepancia', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/detalle-trafico", err);
 
         portalModel.agregarDiscrepancia(id_trafico, id_user, message, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/agregar-comentario', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
+            return returnSuccessResult(res, results);
         });
 
     });
@@ -580,29 +551,14 @@ router.post('/referencia-descarga', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/referencia-descarga", err);
 
         portalModel.referenciaDescarga(id_trafico, id_user, unload_date, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/referencia-descarga', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
+            return returnSuccessResult(res, results);
 
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
         });
 
     });
@@ -644,29 +600,14 @@ router.post('/referencia-carga', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/referencia-carga", err);
 
         portalModel.referenciaCarga(id_trafico, id_user, load_date, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/referencia-carga', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
+            return returnSuccessResult(res, results);
 
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
         });
 
     });
@@ -691,28 +632,16 @@ router.post('/obtener-bultos', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/obtener-bultos", err);
 
         portalModel.obtenerBultos(id_trafico, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/obtener-bultos', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
             } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
+                return returnDBEmpty(res, req, "/obtener-bultos", results);
             }
         });
 
@@ -757,29 +686,13 @@ router.post('/agregar-bulto', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/agregar-bulto", err);
 
         portalModel.agregarBulto(id_bodega, id_trafico, id_user, dano, observacion, uuid, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/agregar-bulto', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
+            return returnSuccessResult(res, results);
         });
 
     });
@@ -793,9 +706,10 @@ router.post('/actualizar-bulto', function (req, res) {
     const dano = req.body.dano;
     const observacion = req.body.observacion;
     const uuid = req.body.uuid;
-    const unload_date = req.body.unload_date;
-    const load_date = req.body.load_date;
-    const revision_date = req.body.revision_date;
+
+    let unload_date = req.body.unload_date;
+    let load_date = req.body.load_date;
+    let revision_date = req.body.revision_date;
 
     if (!token) return res.status(401).send({
         auth: false,
@@ -807,53 +721,54 @@ router.post('/actualizar-bulto', function (req, res) {
         message: 'Package ID is required.'
     });
 
-    if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
-        error: true,
-        message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
-    });
+    if (unload_date !== undefined && unload_date !== '') {
+        if (!moment(unload_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) {
+            return res.status(200).send({
+                error: true,
+                message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+            });
+        }
+    } else {
+        unload_date = null;
+    }
 
-    if (!moment(load_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
-        error: true,
-        message: 'Load date is not in valid format (YYYY-MM-DD HH:mm:ss).'
-    });
+    if (load_date !== undefined && load_date !== '') {
+        if (!moment(load_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) {
+            return res.status(200).send({
+                error: true,
+                message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+            });
+        }
+    } else {
+        load_date = null;
+    }
 
-    if (!moment(revision_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
-        error: true,
-        message: 'Revision date is not in valid format (YYYY-MM-DD HH:mm:ss).'
-    });
+    if (revision_date !== undefined && revision_date !== '') {
+        if (!moment(revision_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) {
+            return res.status(200).send({
+                error: true,
+                message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+            });
+        }
+    } else {
+        revision_date = null;
+    }
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/actualizar-bulto", err);
 
         portalModel.actualizarBulto(id_bulto, dano, observacion, uuid, unload_date, load_date, revision_date, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/actualizar-bulto', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
+            return returnSuccessResult(res, results);
 
-            } else {
-
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-
-            }
         });
 
     });
 
 });
-
-const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 
 router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
@@ -878,39 +793,32 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/subir-imagen", err);
 
         if(req.file) {
 
             portalModel.detalleTrafico(id_trafico, function (error, results) {
                 if (error) {
 
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    res.status(500).send({
-                        "error": true,
-                        'message': error
-                    });
+                    return returnDBError(res, req, '/subir-imagen', error);
 
                 } else if (typeof results !== 'undefined' && results.length > 0) {
 
-                    eta_date = moment(results[0].fecha_eta);
+                    let eta_date = moment(results[0].fecha_eta);
 
-                    var filename_out = req.file.destination + path.sep + results[0].siglas + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") + 
+                    let filename_out = req.file.destination + path.sep + results[0].siglas + path.sep + eta_date.format("Y") + path.sep + eta_date.format("MM") +
                         path.sep + eta_date.format("DD") + path.sep + results[0].referencia + path.sep + req.file.originalname;
 
                     if (!fs.existsSync(filename_out)) {
 
                         fs.move(req.file.path, filename_out, function (err) {
 
-                            carpeta = path.dirname(filename_out);
-                            imagen = path.basename(filename_out);
-                            miniatura = null;
-                            id_status = 1;
+                            let carpeta = path.dirname(filename_out);
+                            let imagen = path.basename(filename_out);
+                            let miniatura;
+                            let id_status = 1;
 
-                            filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
+                            let filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
                             miniatura = path.basename(filename_thumb);
 
                             thumb({
@@ -922,52 +830,25 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                             });
 
                             portalModel.agregarImagen(id_trafico, id_bulto, id_status, carpeta, imagen, miniatura, function (error, results) {
-                                if (error) {
-
-                                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                                    res.status(500).send({
-                                        "error": true,
-                                        'message': error
-                                    });
+                                if (error)
+                                    return returnDBError(res, req, '/subir-imagen', error);
                     
-                                } else {
-                    
-                                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                                    res.status(200).send({
-                                        success: true,
-                                        results: results
-                                    });
-                    
-                                }
+                                return returnSuccessResult(res, results);
                             });
 
                         });
 
                     } else {
-                        //fs.unlinkSync(req.file.path);
 
-                        carpeta = path.dirname(filename_out);
-                        imagen = path.basename(filename_out);
+                        let carpeta = path.dirname(filename_out);
+                        let imagen = path.basename(filename_out);
 
                         portalModel.comprobarImagen(id_trafico, imagen, function (error, results) {
-                            if (error) {
-                                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                                res.status(500).send({
-                                    "error": true,
-                                    'message': error
-                                });
-                
-                            } else {
-                
-                                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                                res.status(200).send({
-                                    success: true,
-                                    results: {
-                                        "message" : "Image exists"
-                                    }
-                                });
-                
-                            }
+                            if (error)
+                                return returnDBError(res, req, '/subir-imagen', error);
+
+                            return returnSuccessResult(res, {success: true, message: "Image exists"});
+
                         });
 
                     }
@@ -976,10 +857,7 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
             });
 
         } else {
-            return res.status(401).send({
-                error: true,
-                message: 'Image is necessary.'
-            });
+            return returnError(res, 'Image is necessary.');
         }
     });
 
@@ -1008,49 +886,25 @@ router.post('/borrar-imagen', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/borrar-imagen", err);
 
         portalModel.buscarImagen(id_trafico, id_imagen, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/ordenes', error);
 
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
+            let filename_img = results.carpeta + path.sep + results.imagen;
+            let filename_tmb = results.carpeta + path.sep + results.miniatura;
 
-            } else {
+            portalModel.borrarImagen(id_trafico, id_imagen, function (error, results) {
+                if (error)
+                    return returnDBError(res, req, '/borrar-imagen', error);
 
-                filename_img = results.carpeta + path.sep + results.imagen;
-                filename_tmb = results.carpeta + path.sep + results.miniatura;
+                fs.unlinkSync(filename_img);
+                fs.unlinkSync(filename_tmb);
 
-                portalModel.borrarImagen(id_trafico, id_imagen, function (error, results) {
-                    if (error) {
-            
-                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                        res.status(500).send({
-                            "error": true,
-                            'message': error
-                        });
-            
-                    } else {
+                return returnSuccessResult(res, results);
 
-                        fs.unlinkSync(filename_img);
-                        fs.unlinkSync(filename_tmb);
-
-                        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                        res.status(200).send({
-                            success: true,
-                            results: results
-                        });
-
-                    }
-                });
-
-            }
+            });
         });
 
     });
@@ -1074,29 +928,14 @@ router.post('/obtener-imagenes', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/obtener-imagenes", err);
 
         portalModel.obtenerImagenes(id_trafico, function (error, results) {
-            if (error) {
-    
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-    
-            } else {
-    
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-    
-            }
+            if (error)
+                return returnDBError(res, req, '/obtener-imagenes', error);
+
+            return returnSuccessResult(res, results);
+
         });
 
     });
@@ -1126,44 +965,22 @@ router.post('/obtener-imagen', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/obtener-imagen", err);
 
         portalModel.obtenerImagen(id_imagen, id_trafico, function (error, results) {
-            if (error) {
+            if (error)
+                return returnDBError(res, req, '/ordenes', error);
     
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-    
+            let filename_out = results[0].carpeta + path.sep + results[0].imagen;
+
+            if (fs.existsSync(filename_out)) {
+
+                let base64str = base64_encode(filename_out);
+
+                return returnSuccessResult(res, {image : base64str});
+
             } else {
-
-                filename_out = results[0].carpeta + path.sep + results[0].imagen;
-                if (fs.existsSync(filename_out)) {
-
-                    var base64str = base64_encode(filename_out);
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    res.status(200).send({
-                        success: true,
-                        results: {
-                            'image' : base64str
-                        }
-                    });
-
-                } else {
-
-                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    res.status(500).send({
-                        "error": true,
-                        'message': 'Image file not found!'
-                    });
-
-                }
-    
+                return returnError(res, 'Image file not found.');
             }
         });
 
@@ -1171,7 +988,7 @@ router.post('/obtener-imagen', function (req, res) {
 
 });
 
-router.get('/imprimir-qr', function (req, res) {
+/*router.get('/imprimir-qr', function (req, res) {
     
     var arr = {
         'uuid': uuidv4(),
@@ -1189,7 +1006,7 @@ router.get('/imprimir-qr', function (req, res) {
         res.render('imprimir-qr', { qr: url });
 
       });
-});
+});*/
 
 router.post('/buscar-uuid', function (req, res) {
     
@@ -1208,29 +1025,13 @@ router.post('/buscar-uuid', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return res.status(500).send({
-            auth: false,
-            message: 'Failed to authenticate token.'
-        });
+        if (err) return returnTokenError(res, req, token, "/buscar-uuid", err);
 
         portalModel.buscarQr(uuid, function (error, results) {
-            if (error) {
-    
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(500).send({
-                    "error": true,
-                    'message': error
-                });
-    
-            } else {
-    
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.status(200).send({
-                    success: true,
-                    results: results
-                });
-    
-            }
+            if (error)
+                return returnDBError(res, req, '/buscar-uuid', error);
+
+            return returnSuccessResult(res, results);
         });
 
     });
@@ -1238,35 +1039,7 @@ router.post('/buscar-uuid', function (req, res) {
 
 });
 
-function sendErrHandler(res, err) {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.status(200).send({
-        success: false,
-        message: err
-    });
-    return true;
-}
-
-function sendEmptyResponse(res, message = "") {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.status(200).send({
-        success: false,
-        response: [],
-        message: message
-    });
-    return true;
-}
-
-function sendSuccessResponse(res, response) {
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.status(200).send({
-        success: true,
-        response: response
-    });
-    return true;
-}
-
-router.get('/qr-reader', function (req, res) {
+/*router.get('/qr-reader', function (req, res) {
     var QrCode = require('qrcode-reader');
     var Jimp = require("jimp");
     var buffer = fs.readFileSync('D:\\Temp\\20190829_182013.png');
@@ -1291,6 +1064,6 @@ router.get('/qr-reader', function (req, res) {
 
     });
 
-});
+});*/
 
 module.exports = router;

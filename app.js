@@ -11,7 +11,7 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var api = require('./routes/api');
 
-var lggr = require('./controllers/mylogger');
+var lggr = require('./controllers/api_logger');
 
 var app = express();
 
