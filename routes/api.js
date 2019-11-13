@@ -247,12 +247,12 @@ router.post('/descargas', function (req, res) {
 
         portalModel.traficosDescarga(id_bodega, function (error, results) {
             if (error)
-                return returnDBError(res, req, '/descargas', error);
+                return returnDBError(res, req, '/descargas?id_bodega=' + id_bodega, error);
 
             if (results.error === undefined) {
                 return returnSuccessResult(res, results);
             } else {
-                return returnDBEmpty(res, req, "/descargas", results);
+                return returnDBEmpty(res, req, "/descargas?id_bodega=" + id_bodega, results);
             }
         });
     });
