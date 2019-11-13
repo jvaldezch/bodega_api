@@ -81,7 +81,7 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
             "t.contenedorCajaEntrada AS caja_entrada " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
-            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.contenedorCajaEntrada IS NOT NULL;";
+            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.contenedorCajaEntrada IS NOT NULL AND estatus NOT IN (3, 4);";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
@@ -121,7 +121,7 @@ portalModel.traficosCarga = function (id_bodega, callback) {
             "t.contenedorCajaSalida AS caja_salida " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
-            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.ordenCarga IS NOT NULL;";
+            "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
@@ -415,6 +415,7 @@ portalModel.obtenerBultos = function (id_trafico, callback) {
             "b.dano, " +
             "b.uuid, " +
             "b.observacion, " +
+            "b.mercancia, " +
             "b.uuid, " +
             "b.qr, " +
             "DATE_FORMAT(b.descarga, '%Y-%m-%d %H:%i:%s') AS unload_date, " +
