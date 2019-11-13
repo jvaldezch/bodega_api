@@ -75,6 +75,9 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
             "c.nombre AS nombre_cliente, " +
             "t.referencia, " +
             "t.bultos, " +
+            "t.ubicacion, " +
+            "t.proveedores AS proveedor, " +
+            "t.blGuia AS bl_guia, " +
             "t.contenedorCajaEntrada AS caja_entrada " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
@@ -111,6 +114,9 @@ portalModel.traficosCarga = function (id_bodega, callback) {
             "c.nombre AS nombre_cliente, " +
             "t.referencia, " +
             "t.bultos, " +
+            "t.ubicacion, " +
+            "t.proveedores AS proveedor, " +
+            "t.blGuia AS bl_guia, " +
             "t.ordenCarga AS orden_salida, " +
             "t.contenedorCajaSalida AS caja_salida " +
             "FROM traficos t " +
