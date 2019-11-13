@@ -276,16 +276,82 @@ router.post('/cargas', function (req, res) {
 
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
-        if (err) return returnTokenError(res, req, token, "/cargas", err);
+        if (err) return returnTokenError(res, req, token, "/cargas?id_bodega=" + id_bodega, err);
 
         portalModel.traficosCarga(id_bodega, function (error, results) {
             if (error)
-                return returnDBError(res, req, '/cargas', error);
+                return returnDBError(res, req, '/cargas?id_bodega=' + id_bodega, error);
 
             if (results.error === undefined) {
                 return returnSuccessResult(res, results);
             } else {
-                return returnDBEmpty(res, req, "/cargas", results);
+                return returnDBEmpty(res, req, "/cargas?id_bodega=" + id_bodega, results);
+            }
+        });
+    });
+
+});
+
+router.post('/revision', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_bodega = req.body.id_bodega;
+
+    if (!token) return res.status(200).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_bodega) return res.status(200).send({
+        error: true,
+        message: 'Warehouse ID is required.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return returnTokenError(res, req, token, "/revision?id_bodega=" + id_bodega, err);
+
+        portalModel.traficosRevision(id_bodega, function (error, results) {
+            if (error)
+                return returnDBError(res, req, '/revision?id_bodega=' + id_bodega, error);
+
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/revision?id_bodega=" + id_bodega, results);
+            }
+        });
+    });
+
+});
+
+router.post('/salida', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_bodega = req.body.id_bodega;
+
+    if (!token) return res.status(200).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_bodega) return res.status(200).send({
+        error: true,
+        message: 'Warehouse ID is required.'
+    });
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return returnTokenError(res, req, token, "/salida?id_bodega=" + id_bodega, err);
+
+        portalModel.traficosSalida(id_bodega, function (error, results) {
+            if (error)
+                return returnDBError(res, req, '/salida?id_bodega=' + id_bodega, error);
+
+            if (results.error === undefined) {
+                return returnSuccessResult(res, results);
+            } else {
+                return returnDBEmpty(res, req, "/salida?id_bodega=" + id_bodega, results);
             }
         });
     });

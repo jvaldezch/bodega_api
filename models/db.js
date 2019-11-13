@@ -78,6 +78,7 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
             "t.ubicacion, " +
             "t.proveedores AS proveedor, " +
             "t.blGuia AS bl_guia, " +
+            "t.pesoKg AS peso_kg, " +
             "t.contenedorCajaEntrada AS caja_entrada " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
@@ -117,11 +118,96 @@ portalModel.traficosCarga = function (id_bodega, callback) {
             "t.ubicacion, " +
             "t.proveedores AS proveedor, " +
             "t.blGuia AS bl_guia, " +
+            "t.pesoKg AS peso_kg, " +
             "t.ordenCarga AS orden_salida, " +
             "t.contenedorCajaSalida AS caja_salida " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "WHERE t.idBodega = " + db.escape(id_bodega) + " AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ error: true, message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback(null, {
+                    error: true,
+                    message: "No references found to load."
+                });
+            }
+
+        });
+
+    });
+
+};
+
+portalModel.traficosRevision = function (id_bodega, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let sql = "SELECT " +
+            "t.id AS id_trafico, " +
+            "t.rfcCliente AS rfc_cliente, " +
+            "c.nombre AS nombre_cliente, " +
+            "t.referencia, " +
+            "t.bultos, " +
+            "t.ubicacion, " +
+            "t.proveedores AS proveedor, " +
+            "t.blGuia AS bl_guia, " +
+            "t.pesoKg AS peso_kg, " +
+            "t.ordenCarga AS orden_salida, " +
+            "t.contenedorCajaSalida AS caja_salida " +
+            "FROM traficos t " +
+            "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "WHERE t.idBodega = " + db.escape(id_bodega) + 
+            " AND fechaCarga IS NOT NULL AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ error: true, message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
+            } else {
+                callback(null, {
+                    error: true,
+                    message: "No references found to load."
+                });
+            }
+
+        });
+
+    });
+
+};
+
+portalModel.traficosSalida = function (id_bodega, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let sql = "SELECT " +
+            "t.id AS id_trafico, " +
+            "t.rfcCliente AS rfc_cliente, " +
+            "c.nombre AS nombre_cliente, " +
+            "t.referencia, " +
+            "t.bultos, " +
+            "t.ubicacion, " +
+            "t.proveedores AS proveedor, " +
+            "t.blGuia AS bl_guia, " +
+            "t.pesoKg AS peso_kg, " +
+            "t.ordenCarga AS orden_salida, " +
+            "t.contenedorCajaSalida AS caja_salida " +
+            "FROM traficos t " +
+            "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
+            "WHERE t.idBodega = " + db.escape(id_bodega) + 
+            " AND fechaCarga IS NOT NULL AND fechaRevision IS NOT NULL AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
