@@ -272,7 +272,7 @@ portalModel.bodegas = function (id_user, callback) {
         if (err) callback({ error: true, message: err }, null);
 
         let sql = "SELECT " +
-            "id AS id_bodega " +
+            "idBodega AS id_bodega " +
             "FROM trafico_usubodegas " +
             "WHERE idUsuario = " + id_user + ";";
 
