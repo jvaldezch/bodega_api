@@ -74,6 +74,7 @@ portalModel.traficosDescarga = function (id_bodega, callback) {
             "t.rfcCliente AS rfc_cliente, " +
             "c.nombre AS nombre_cliente, " +
             "t.referencia, " +
+            "t.pedimento, " +
             "t.bultos, " +
             "t.ubicacion, " +
             "t.proveedores AS proveedor, " +
@@ -114,6 +115,7 @@ portalModel.traficosCarga = function (id_bodega, callback) {
             "t.rfcCliente AS rfc_cliente, " +
             "c.nombre AS nombre_cliente, " +
             "t.referencia, " +
+            "t.pedimento, " +
             "t.bultos, " +
             "t.ubicacion, " +
             "t.proveedores AS proveedor, " +
@@ -155,6 +157,7 @@ portalModel.traficosRevision = function (id_bodega, callback) {
             "t.rfcCliente AS rfc_cliente, " +
             "c.nombre AS nombre_cliente, " +
             "t.referencia, " +
+            "t.pedimento, " +
             "t.bultos, " +
             "t.ubicacion, " +
             "t.proveedores AS proveedor, " +
