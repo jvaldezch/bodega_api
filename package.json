@@ -21,6 +21,7 @@
     "dotenv": "^5.0.1",
     "express": "^4.16.4",
     "fs-extra": "^7.0.1",
+    "handlebars": "^4.5.3",
     "hbs": "~4.0.1",
     "jimp": "^0.6.4",
     "jsonwebtoken": "^8.4.0",

@@ -3,14 +3,16 @@ const mysql = require('mysql');
 
 const moment = require('moment');
 
-const db = mysql.createPool({
+const db_params = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     connectionLimit: 500
-});
+};
+
+const db = mysql.createPool(db_params);
 
 const portalModel = {};
 
@@ -325,10 +327,12 @@ portalModel.detalleTrafico = function (id_trafico, callback) {
             "t.fechaDescarga as fecha_descarga, " +
             "t.fechaCarga as fecha_carga, " +
             "t.fechaEta as fecha_eta, " +
-            "b.siglas " +
+            "b.siglas, " +
+            "u.email " +
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "LEFT JOIN trafico_bodegas b ON t.idBodega = b.id " +
+            "LEFT JOIN usuarios u ON u.id = t.idUsuario " +
             "WHERE t.id = " + db.escape(id_trafico) + ";";
 
         connection.query(sql, function (error, results, fields) {
@@ -428,6 +432,28 @@ portalModel.agregarComentario = function (id_trafico, id_user, message, callback
 
             if (results.insertId) {
                 callback(null, { 'id_comment': results.insertId });
+            }
+
+        });
+
+    });
+
+};
+
+portalModel.emailUsuario = async function (id_user, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let sql = "SELECT u.email FROM usuarios AS u WHERE u.id = " + db.escape(id_user) + " LIMIT 1;";
+
+        connection.query(sql, function (error, results, fields) {
+            connection.release();
+            if (err) callback({ error: true, message: err }, null);
+
+            if (results.length > 0) {
+                callback(null, results);
             }
 
         });

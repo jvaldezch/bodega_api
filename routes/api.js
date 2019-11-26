@@ -30,9 +30,7 @@ router.get('/', function (req, res, next) {
 });
 
 function base64_encode(file) {
-    // read binary data
     let bitmap = fs.readFileSync(file);
-    // convert binary data to base64 encoded string
     return new Buffer(bitmap).toString('base64');
 }
 
@@ -540,58 +538,73 @@ router.post('/agregar-comentario', function (req, res) {
                 if (error)
                     return returnDBError(res, req, '/detalle-trafico', error);
 
-                if (ress.error === undefined) {
+                portalModel.emailUsuario(id_user, function (e, r) {
+                    if (e)
+                        return returnDBError(res, req, '/detalle-trafico', e);
 
-                    let transporter = nodemailer.createTransport({
-                        host: process.env.SMTP_HOST,
-                        port: process.env.SMTP_PORT,
-                        auth: {
-                            user: process.env.SMTP_USER,
-                            pass: process.env.SMTP_PASS
-                        },
-                        secure:false,
-                        // here it goes
-                        tls: {rejectUnauthorized: false},
-                        debug:true
-                    });
+                    console.log(r[0].email);
 
-                    let source = fs.readFileSync(path.resolve(__dirname, '../views/templates/new-comment.html'), 'utf-8');
+                    if (ress.error === undefined && r.error === undefined) {
 
-                    let template = handlebars.compile(source);
+                        let transporter = nodemailer.createTransport({
+                            host: process.env.SMTP_HOST,
+                            port: process.env.SMTP_PORT,
+                            auth: {
+                                user: process.env.SMTP_USER,
+                                pass: process.env.SMTP_PASS
+                            },
+                            secure:false,
+                            // here it goes
+                            tls: {rejectUnauthorized: false},
+                            debug:true
+                        });
 
-                    let html_output = template({
-                        message: message,
-                        referencia: ress[0].referencia,
-                        nombre_cliente: ress[0].nombre_cliente,
-                        bl_guia: ress[0].bl_guia
-                    });
+                        let source = fs.readFileSync(path.resolve(__dirname, '../views/templates/new-comment.html'), 'utf-8');
 
-                    let toList = [
-                        '"Soporte OAQ" <soporte@oaq.com.mx>',
-                        '"Jaime E. Valdez" <ti.jvaldez@oaq.com.mx>',
-                        '"David Lopez R." <dlopez@oaq.com.mx>',
-                    ];
+                        let template = handlebars.compile(source);
 
-                    let mailOptions = {
-                        from: '"Notificaciones OAQ "<' + process.env.SMTP_USER + '>',
-                        to: toList,
-                        subject: '[' + ress[0].siglas + '] Nuevo comentario en referencia ' + ress[0].referencia,
-                        html: html_output
-                    };
+                        let html_output = template({
+                            message: message,
+                            referencia: ress[0].referencia,
+                            nombre_cliente: ress[0].nombre_cliente,
+                            bl_guia: ress[0].bl_guia
+                        });
 
-                    transporter.sendMail(mailOptions, function(error, info){
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('Email sent: ' + info.response);
-                        }
-                    });
+                        let toList = [
+                            ress[0].email,
+                            r[0].email
+                        ];
 
-                    return returnSuccessResult(res, results);
+                        let ccList = [
+                            '"Soporte OAQ" <soporte@oaq.com.mx>',
+                            '"David Lopez R." <dlopez@oaq.com.mx>',
+                        ];
 
-                } else {
-                    return returnDBEmpty(res, req, "/detalle-trafico", results);
-                }
+                        let mailOptions = {
+                            from: '"Notificaciones OAQ "<' + process.env.SMTP_USER + '>',
+                            to: toList,
+                            cc: ccList,
+                            subject: '[' + ress[0].siglas + '] Nuevo comentario en referencia ' + ress[0].referencia,
+                            html: html_output
+                        };
+
+                        transporter.sendMail(mailOptions, function(error, info){
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log('Email sent: ' + info.response);
+                            }
+                        });
+
+                        return returnSuccessResult(res, results);
+
+                    } else {
+                        return returnDBEmpty(res, req, "/detalle-trafico", results);
+                    }
+
+                });
+
+
             });
         });
 
