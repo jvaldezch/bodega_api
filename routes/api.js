@@ -560,7 +560,7 @@ router.post('/agregar-comentario', function (req, res) {
                     let template = handlebars.compile(source);
 
                     let html_output = template({
-                        message: "El embarque no ha salido.",
+                        message: message,
                         referencia: ress[0].referencia,
                         nombre_cliente: ress[0].nombre_cliente,
                         bl_guia: ress[0].bl_guia
