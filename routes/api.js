@@ -14,7 +14,7 @@ const thumb = require('node-thumbnail').thumb;
 
 const lggr = require('../controllers/api_logger');
 
-moment.updateLocale('en');
+moment.updateLocale("en");
 
 const router = express.Router();
 
@@ -23,6 +23,7 @@ const portalModel = require('../models/db');
 const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 
 const nodemailer = require('nodemailer');
+const handlebars = require('handlebars');
 
 router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
@@ -535,43 +536,63 @@ router.post('/agregar-comentario', function (req, res) {
             if (error)
                 return returnDBError(res, req, '/agregar-comentario', error);
 
-            let transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST,
-                port: process.env.SMTP_PORT,
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                },            
-                secure:false,
-                // here it goes
-                tls: {rejectUnauthorized: false},
-                debug:true
-            });
+            portalModel.detalleTrafico(id_trafico, function (error, ress) {
+                if (error)
+                    return returnDBError(res, req, '/detalle-trafico', error);
 
-            let toList = [
-                '"Soporte OAQ" <soporte@oaq.com.mx>',
-                '"Jaime E. Valdez" <ti.jvaldez@oaq.com.mx>',
-                '"David Lopez R." <dlopez@oaq.com.mx>',
-            ];
+                if (ress.error === undefined) {
 
-            let mailOptions = {
-                from: '"Notificaciones OAQ "<' + process.env.SMTP_USER + '>',
-                to: toList,
-                subject: 'Sending Email from OAQ API',
-                text: 'Hola, este es un email desde la API.',
-                html: '<p>Mensaje a ID trafico ' + id_trafico + ', contenido<br>' + message + '</p>'
-            };
+                    let transporter = nodemailer.createTransport({
+                        host: process.env.SMTP_HOST,
+                        port: process.env.SMTP_PORT,
+                        auth: {
+                            user: process.env.SMTP_USER,
+                            pass: process.env.SMTP_PASS
+                        },
+                        secure:false,
+                        // here it goes
+                        tls: {rejectUnauthorized: false},
+                        debug:true
+                    });
 
-            
-            transporter.sendMail(mailOptions, function(error, info){
-                if (error) {
-                console.log(error);
+                    let source = fs.readFileSync(path.resolve(__dirname, '../views/templates/new-comment.html'), 'utf-8');
+
+                    let template = handlebars.compile(source);
+
+                    let html_output = template({
+                        message: "El embarque no ha salido.",
+                        referencia: ress[0].referencia,
+                        nombre_cliente: ress[0].nombre_cliente,
+                        bl_guia: ress[0].bl_guia
+                    });
+
+                    let toList = [
+                        '"Soporte OAQ" <soporte@oaq.com.mx>',
+                        '"Jaime E. Valdez" <ti.jvaldez@oaq.com.mx>',
+                        '"David Lopez R." <dlopez@oaq.com.mx>',
+                    ];
+
+                    let mailOptions = {
+                        from: '"Notificaciones OAQ "<' + process.env.SMTP_USER + '>',
+                        to: toList,
+                        subject: '[' + ress[0].siglas + '] Nuevo comentario en referencia ' + ress[0].referencia,
+                        html: html_output
+                    };
+
+                    transporter.sendMail(mailOptions, function(error, info){
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log('Email sent: ' + info.response);
+                        }
+                    });
+
+                    return returnSuccessResult(res, results);
+
                 } else {
-                console.log('Email sent: ' + info.response);
+                    return returnDBEmpty(res, req, "/detalle-trafico", results);
                 }
             });
-
-            return returnSuccessResult(res, results);
         });
 
     });
