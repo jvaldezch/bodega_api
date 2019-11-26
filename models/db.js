@@ -721,6 +721,84 @@ portalModel.actualizarBulto = function (id_bulto, dano, observacion, uuid, desca
 
 };
 
+portalModel.actualizarBultoDescarga = function (id_bulto, dano, observacion, descarga, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let actualizado = moment().format('YYYY-MM-DD HH:mm:ss');
+        let sql = "UPDATE trafico_bultos SET dano = " + dano + ", observacion = '" + observacion + "', descarga = '" + descarga + "', actualizado = '" + actualizado + "' WHERE id = " + id_bulto +";";
+
+        connection.query(sql, function (errs, results, fields) {
+            connection.release();
+            if (errs) {
+                callback({ error: true, message: err }, null);
+            }
+            if (results.affectedRows > 0) {
+                callback(null, { 'updated': true });
+            } else {
+                callback(null, { 'updated': false, 'message': results.affectedRows + " record(s) updated" });
+            }
+
+        });
+
+    });
+
+};
+
+portalModel.actualizarBultoCarga = function (id_bulto, dano, observacion, carga, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let actualizado = moment().format('YYYY-MM-DD HH:mm:ss');
+        let sql = "UPDATE trafico_bultos SET dano = " + dano + ", observacion = '" + observacion + "', carga = '" + carga + "', actualizado = '" + actualizado + "' WHERE id = " + id_bulto +";";
+
+        connection.query(sql, function (errs, results, fields) {
+            connection.release();
+            if (errs) {
+                callback({ error: true, message: err }, null);
+            }
+            if (results.affectedRows > 0) {
+                callback(null, { 'updated': true });
+            } else {
+                callback(null, { 'updated': false, 'message': results.affectedRows + " record(s) updated" });
+            }
+
+        });
+
+    });
+
+};
+
+portalModel.actualizarBultoRevision = function (id_bulto, dano, observacion, revision, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        let actualizado = moment().format('YYYY-MM-DD HH:mm:ss');
+        let sql = "UPDATE trafico_bultos SET dano = " + dano + ", observacion = '" + observacion + "', revision = '" + revision + "', actualizado = '" + actualizado + "' WHERE id = " + id_bulto +";";
+
+        connection.query(sql, function (errs, results, fields) {
+            connection.release();
+            if (errs) {
+                callback({ error: true, message: err }, null);
+            }
+            if (results.affectedRows > 0) {
+                callback(null, { 'updated': true });
+            } else {
+                callback(null, { 'updated': false, 'message': results.affectedRows + " record(s) updated" });
+            }
+
+        });
+
+    });
+
+};
+
 portalModel.buscarQr = function (uuid, callback) {
 
     db.getConnection(function (err, connection) {

@@ -22,6 +22,8 @@ const portalModel = require('../models/db');
 
 const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 
+const nodemailer = require('nodemailer');
+
 router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
 });
@@ -533,6 +535,42 @@ router.post('/agregar-comentario', function (req, res) {
             if (error)
                 return returnDBError(res, req, '/agregar-comentario', error);
 
+            let transporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: process.env.SMTP_PORT,
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                },            
+                secure:false,
+                // here it goes
+                tls: {rejectUnauthorized: false},
+                debug:true
+            });
+
+            let toList = [
+                '"Soporte OAQ" <soporte@oaq.com.mx>',
+                '"Jaime E. Valdez" <ti.jvaldez@oaq.com.mx>',
+                '"David Lopez R." <dlopez@oaq.com.mx>',
+            ];
+
+            let mailOptions = {
+                from: '"Notificaciones OAQ "<' + process.env.SMTP_USER + '>',
+                to: toList,
+                subject: 'Sending Email from OAQ API',
+                text: 'Hola, este es un email desde la API.',
+                html: '<p>Mensaje a ID trafico ' + id_trafico + ', contenido<br>' + message + '</p>'
+            };
+
+            
+            transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                console.log(error);
+                } else {
+                console.log('Email sent: ' + info.response);
+                }
+            });
+
             return returnSuccessResult(res, results);
         });
 
@@ -771,7 +809,7 @@ router.post('/actualizar-bulto', function (req, res) {
     const id_bulto = req.body.id_bulto;
     const dano = req.body.dano;
     const observacion = req.body.observacion;
-    const uuid = req.body.uuid;
+    //const uuid = req.body.uuid;
 
     let unload_date = req.body.unload_date;
     let load_date = req.body.load_date;
@@ -823,15 +861,27 @@ router.post('/actualizar-bulto', function (req, res) {
     jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
 
         if (err) return returnTokenError(res, req, token, "/actualizar-bulto", err);
-
-        portalModel.actualizarBulto(id_bulto, dano, observacion, uuid, unload_date, load_date, revision_date, function (error, results) {
-            if (error)
-                return returnDBError(res, req, '/actualizar-bulto', error);
-
-            return returnSuccessResult(res, results);
-
-        });
-
+        if (unload_date && !load_date && !revision_date) {
+            portalModel.actualizarBultoDescarga(id_bulto, dano, observacion, unload_date, function (error, results) {
+                if (error)
+                    return returnDBError(res, req, '/actualizar-bulto?fecha_descarga=' + unload_date, error);
+                return returnSuccessResult(res, results);
+            });
+        }
+        if (load_date && !unload_date && !revision_date) {
+            portalModel.actualizarBultoCarga(id_bulto, dano, observacion, load_date, function (error, results) {
+                if (error)
+                    return returnDBError(res, req, '/actualizar-bulto?fecha_carga=' + load_date, error);
+                return returnSuccessResult(res, results);
+            });
+        }
+        if (revision_date && !load_date && !unload_date) {
+            portalModel.actualizarBultoRevision(id_bulto, dano, observacion, revision_date, function (error, results) {
+                if (error)
+                    return returnDBError(res, req, '/actualizar-bulto?fecha_revision=' + revision_date, error);
+                return returnSuccessResult(res, results);
+            });
+        }
     });
 
 });
