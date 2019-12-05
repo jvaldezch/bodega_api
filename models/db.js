@@ -500,6 +500,24 @@ portalModel.referenciaDescarga = function (id_trafico, id_user, unload_date, cal
 
 };
 
+portalModel.referenciaRevision = function (id_trafico, id_user, revision_date, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        connection.query('UPDATE traficos SET fechaRevision = ? WHERE id = ?', [revision_date, id_trafico], function (error, results, fields) {
+            connection.release();
+            if (err) callback({ error: true, message: err }, null);
+
+            callback(null, { 'updated': true });
+
+        });
+
+    });
+
+};
+
 portalModel.referenciaCarga = function (id_trafico, id_user, load_date, callback) {
 
     db.getConnection(function (err, connection) {
@@ -507,6 +525,24 @@ portalModel.referenciaCarga = function (id_trafico, id_user, load_date, callback
         if (err) callback({ error: true, message: err }, null);
 
         connection.query('UPDATE traficos SET fechaCarga = ? WHERE id = ?', [load_date, id_trafico], function (error, results, fields) {
+            connection.release();
+            if (err) callback({ error: true, message: err }, null);
+
+            callback(null, { 'updated': true });
+
+        });
+
+    });
+
+};
+
+portalModel.referenciaSalida = function (id_trafico, id_user, dispatch_date, callback) {
+
+    db.getConnection(function (err, connection) {
+
+        if (err) callback({ error: true, message: err }, null);
+
+        connection.query('UPDATE traficos SET fechaSalida = ? WHERE id = ?', [dispatch_date, id_trafico], function (error, results, fields) {
             connection.release();
             if (err) callback({ error: true, message: err }, null);
 

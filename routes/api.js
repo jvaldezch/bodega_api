@@ -703,6 +703,55 @@ router.post('/referencia-descarga', function (req, res) {
 
 });
 
+router.post('/referencia-revision', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const revision_date = req.body.revision_date;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is required.'
+    });
+
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is required.'
+    });
+
+    if (!revision_date) return res.status(401).send({
+        error: true,
+        message: 'Unload date is required.'
+    });
+
+    if (!moment(revision_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Unload date is not in valid format (YYYY-MM-DD HH:mm:ss).'
+    });
+
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return returnTokenError(res, req, token, "/referencia-revision", err);
+
+        portalModel.referenciaRevision(id_trafico, id_user, revision_date, function (error, results) {
+            if (error)
+                return returnDBError(res, req, '/referencia-revision', error);
+
+            return returnSuccessResult(res, results);
+
+        });
+
+    });
+
+});
+
 router.post('/referencia-carga', function (req, res) {
 
     const token = req.headers['x-access-token'];
@@ -743,6 +792,55 @@ router.post('/referencia-carga', function (req, res) {
         portalModel.referenciaCarga(id_trafico, id_user, load_date, function (error, results) {
             if (error)
                 return returnDBError(res, req, '/referencia-carga', error);
+
+            return returnSuccessResult(res, results);
+
+        });
+
+    });
+
+});
+
+router.post('/referencia-salida', function (req, res) {
+
+    const token = req.headers['x-access-token'];
+    const id_trafico = req.body.id_trafico;
+    const id_user = req.body.id_user;
+    const dispatch_date = req.body.dispatch_date;
+
+    if (!token) return res.status(401).send({
+        auth: false,
+        message: 'No token provided.'
+    });
+
+    if (!id_trafico) return res.status(401).send({
+        error: true,
+        message: 'Traffic ID is required.'
+    });
+
+    if (!id_user) return res.status(401).send({
+        error: true,
+        message: 'User ID is required.'
+    });
+
+    if (!dispatch_date) return res.status(401).send({
+        error: true,
+        message: 'Load date is required.'
+    });
+
+    if (!moment(dispatch_date, 'YYYY-MM-DD HH:mm:ss', true).isValid()) return res.status(401).send({
+        error: true,
+        message: 'Load date is not .'
+    });
+
+
+    jwt.verify(token, process.env.WSSECRET, function (err, decoded) {
+
+        if (err) return returnTokenError(res, req, token, "/referencia-salida", err);
+
+        portalModel.referenciaSalida(id_trafico, id_user, dispatch_date, function (error, results) {
+            if (error)
+                return returnDBError(res, req, '/referencia-salida', error);
 
             return returnSuccessResult(res, results);
 
