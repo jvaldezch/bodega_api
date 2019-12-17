@@ -25,8 +25,6 @@ const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 
-const chmodr = require('chmodr');
-
 router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
 });
