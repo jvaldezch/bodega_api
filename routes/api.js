@@ -25,6 +25,8 @@ const upload = multer({dest: process.env.DIR_EXPEDIENTES});
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 
+const chmodr = require('chmodr');
+
 router.get('/', function (req, res, next) {
     res.render('index', { email: process.env.CONTACT_EMAIL });
 });
@@ -1065,6 +1067,9 @@ router.post('/subir-imagen', upload.single('img_bulto'), function (req, res) {
                             let imagen = path.basename(filename_out);
                             let miniatura;
                             let id_status = 1;
+
+                            fs.chownSync(carpeta, 33, 33);
+                            fs.chownSync(filename_out, 33, 33);
 
                             let filename_thumb = filename_out.replace(/(\.[\w\d_-]+)$/i, '_thumb$1');
                             miniatura = path.basename(filename_thumb);
