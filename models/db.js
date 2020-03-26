@@ -181,7 +181,7 @@ portalModel.traficosRevision = function (id_bodega, callback) {
             } else {
                 callback(null, {
                     error: true,
-                    message: "No references found to load."
+                    message: "No references found for revision."
                 });
             }
 
