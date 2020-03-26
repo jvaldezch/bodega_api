@@ -212,7 +212,7 @@ portalModel.traficosSalida = function (id_bodega, callback) {
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "WHERE t.idBodega = " + db.escape(id_bodega) + 
-            " AND fechaCarga IS NOT NULL AND fechaRevision IS NOT NULL AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
+            " AND (t.fechaCarga IS NOT NULL AND t.fechaRevision IS NOT NULL AND t.ordenCarga IS NOT NULL) AND estatus NOT IN (3, 4);";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
