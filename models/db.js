@@ -170,7 +170,7 @@ portalModel.traficosRevision = function (id_bodega, callback) {
             "FROM traficos t " +
             "LEFT JOIN trafico_clientes c ON c.id = t.idCliente " +
             "WHERE t.idBodega = " + db.escape(id_bodega) + 
-            " AND (fechaDescarga IS NOT NULL AND fechaRevision IS NULL) AND t.ordenCarga IS NOT NULL AND estatus NOT IN (3, 4);";
+            " AND (fechaDescarga IS NOT NULL AND fechaRevision IS NULL) AND estatus NOT IN (3, 4);";
 
         connection.query(sql, function (error, results, fields) {
             connection.release();
